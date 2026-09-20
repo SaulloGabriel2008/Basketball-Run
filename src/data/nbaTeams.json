@@ -1,0 +1,602 @@
+[
+  {
+    "id": "bos-celtics",
+    "name": "Boston Celtics",
+    "shortName": "Celtics",
+    "abbreviation": "BOS",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Atlantic",
+    "arena": "TD Garden",
+    "colors": {
+      "primary": "#007A33",
+      "secondary": "#BA9653",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/bos.png",
+    "prestige": 95,
+    "ratingOffense": 88,
+    "ratingDefense": 89,
+    "ratingPace": 98.5
+  },
+  {
+    "id": "bkn-nets",
+    "name": "Brooklyn Nets",
+    "shortName": "Nets",
+    "abbreviation": "BKN",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Atlantic",
+    "arena": "Barclays Center",
+    "colors": {
+      "primary": "#000000",
+      "secondary": "#FFFFFF",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/bkn.png",
+    "prestige": 65,
+    "ratingOffense": 74,
+    "ratingDefense": 73,
+    "ratingPace": 97.2
+  },
+  {
+    "id": "nyk-knicks",
+    "name": "New York Knicks",
+    "shortName": "Knicks",
+    "abbreviation": "NYK",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Atlantic",
+    "arena": "Madison Square Garden",
+    "colors": {
+      "primary": "#006BB6",
+      "secondary": "#F58426",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/nyk.png",
+    "prestige": 90,
+    "ratingOffense": 85,
+    "ratingDefense": 86,
+    "ratingPace": 95.8
+  },
+  {
+    "id": "phi-76ers",
+    "name": "Philadelphia 76ers",
+    "shortName": "76ers",
+    "abbreviation": "PHI",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Atlantic",
+    "arena": "Wells Fargo Center",
+    "colors": {
+      "primary": "#006BB6",
+      "secondary": "#ED174C",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/phi.png",
+    "prestige": 86,
+    "ratingOffense": 84,
+    "ratingDefense": 82,
+    "ratingPace": 97.0
+  },
+  {
+    "id": "tor-raptors",
+    "name": "Toronto Raptors",
+    "shortName": "Raptors",
+    "abbreviation": "TOR",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Atlantic",
+    "arena": "Scotiabank Arena",
+    "colors": {
+      "primary": "#CE1141",
+      "secondary": "#000000",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/tor.png",
+    "prestige": 72,
+    "ratingOffense": 76,
+    "ratingDefense": 75,
+    "ratingPace": 99.1
+  },
+  {
+    "id": "chi-bulls",
+    "name": "Chicago Bulls",
+    "shortName": "Bulls",
+    "abbreviation": "CHI",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Central",
+    "arena": "United Center",
+    "colors": {
+      "primary": "#CE1141",
+      "secondary": "#000000",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/chi.png",
+    "prestige": 80,
+    "ratingOffense": 77,
+    "ratingDefense": 76,
+    "ratingPace": 98.0
+  },
+  {
+    "id": "cle-cavaliers",
+    "name": "Cleveland Cavaliers",
+    "shortName": "Cavaliers",
+    "abbreviation": "CLE",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Central",
+    "arena": "Rocket Mortgage FieldHouse",
+    "colors": {
+      "primary": "#860038",
+      "secondary": "#041E42",
+      "text": "#FDBB30"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/cle.png",
+    "prestige": 88,
+    "ratingOffense": 87,
+    "ratingDefense": 85,
+    "ratingPace": 98.4
+  },
+  {
+    "id": "det-pistons",
+    "name": "Detroit Pistons",
+    "shortName": "Pistons",
+    "abbreviation": "DET",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Central",
+    "arena": "Little Caesars Arena",
+    "colors": {
+      "primary": "#C8102E",
+      "secondary": "#1D42BA",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/det.png",
+    "prestige": 68,
+    "ratingOffense": 75,
+    "ratingDefense": 74,
+    "ratingPace": 98.8
+  },
+  {
+    "id": "ind-pacers",
+    "name": "Indiana Pacers",
+    "shortName": "Pacers",
+    "abbreviation": "IND",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Central",
+    "arena": "Gainbridge Fieldhouse",
+    "colors": {
+      "primary": "#002D62",
+      "secondary": "#FDBB30",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/ind.png",
+    "prestige": 83,
+    "ratingOffense": 89,
+    "ratingDefense": 77,
+    "ratingPace": 103.2
+  },
+  {
+    "id": "mil-bucks",
+    "name": "Milwaukee Bucks",
+    "shortName": "Bucks",
+    "abbreviation": "MIL",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Central",
+    "arena": "Fiserv Forum",
+    "colors": {
+      "primary": "#00471B",
+      "secondary": "#EEE1C6",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/mil.png",
+    "prestige": 89,
+    "ratingOffense": 86,
+    "ratingDefense": 83,
+    "ratingPace": 99.8
+  },
+  {
+    "id": "atl-hawks",
+    "name": "Atlanta Hawks",
+    "shortName": "Hawks",
+    "abbreviation": "ATL",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Southeast",
+    "arena": "State Farm Arena",
+    "colors": {
+      "primary": "#E03A3E",
+      "secondary": "#C1D32F",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/atl.png",
+    "prestige": 75,
+    "ratingOffense": 82,
+    "ratingDefense": 76,
+    "ratingPace": 101.5
+  },
+  {
+    "id": "cha-hornets",
+    "name": "Charlotte Hornets",
+    "shortName": "Hornets",
+    "abbreviation": "CHA",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Southeast",
+    "arena": "Spectrum Center",
+    "colors": {
+      "primary": "#1D1160",
+      "secondary": "#00788C",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/cha.png",
+    "prestige": 64,
+    "ratingOffense": 73,
+    "ratingDefense": 72,
+    "ratingPace": 99.0
+  },
+  {
+    "id": "mia-heat",
+    "name": "Miami Heat",
+    "shortName": "Heat",
+    "abbreviation": "MIA",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Southeast",
+    "arena": "Kaseya Center",
+    "colors": {
+      "primary": "#98002E",
+      "secondary": "#F9A01B",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/mia.png",
+    "prestige": 87,
+    "ratingOffense": 81,
+    "ratingDefense": 85,
+    "ratingPace": 96.5
+  },
+  {
+    "id": "orl-magic",
+    "name": "Orlando Magic",
+    "shortName": "Magic",
+    "abbreviation": "ORL",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Southeast",
+    "arena": "Kia Center",
+    "colors": {
+      "primary": "#0077C0",
+      "secondary": "#C4CED4",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/orl.png",
+    "prestige": 81,
+    "ratingOffense": 78,
+    "ratingDefense": 87,
+    "ratingPace": 97.4
+  },
+  {
+    "id": "was-wizards",
+    "name": "Washington Wizards",
+    "shortName": "Wizards",
+    "abbreviation": "WAS",
+    "league": "NBA",
+    "conference": "Eastern",
+    "division": "Southeast",
+    "arena": "Capital One Arena",
+    "colors": {
+      "primary": "#002B5C",
+      "secondary": "#E31837",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/was.png",
+    "prestige": 60,
+    "ratingOffense": 72,
+    "ratingDefense": 70,
+    "ratingPace": 102.0
+  },
+  {
+    "id": "den-nuggets",
+    "name": "Denver Nuggets",
+    "shortName": "Nuggets",
+    "abbreviation": "DEN",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Northwest",
+    "arena": "Ball Arena",
+    "colors": {
+      "primary": "#0E2240",
+      "secondary": "#FEC524",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/den.png",
+    "prestige": 92,
+    "ratingOffense": 88,
+    "ratingDefense": 84,
+    "ratingPace": 97.8
+  },
+  {
+    "id": "min-timberwolves",
+    "name": "Minnesota Timberwolves",
+    "shortName": "Timberwolves",
+    "abbreviation": "MIN",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Northwest",
+    "arena": "Target Center",
+    "colors": {
+      "primary": "#0C2340",
+      "secondary": "#236192",
+      "text": "#9EA2A2"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/min.png",
+    "prestige": 88,
+    "ratingOffense": 82,
+    "ratingDefense": 90,
+    "ratingPace": 98.2
+  },
+  {
+    "id": "okc-thunder",
+    "name": "Oklahoma City Thunder",
+    "shortName": "Thunder",
+    "abbreviation": "OKC",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Northwest",
+    "arena": "Paycom Center",
+    "colors": {
+      "primary": "#007AC1",
+      "secondary": "#EF3B24",
+      "text": "#002D62"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/okc.png",
+    "prestige": 93,
+    "ratingOffense": 89,
+    "ratingDefense": 89,
+    "ratingPace": 100.5
+  },
+  {
+    "id": "por-trailblazers",
+    "name": "Portland Trail Blazers",
+    "shortName": "Trail Blazers",
+    "abbreviation": "POR",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Northwest",
+    "arena": "Moda Center",
+    "colors": {
+      "primary": "#E03A3E",
+      "secondary": "#000000",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/por.png",
+    "prestige": 66,
+    "ratingOffense": 73,
+    "ratingDefense": 74,
+    "ratingPace": 98.9
+  },
+  {
+    "id": "uta-jazz",
+    "name": "Utah Jazz",
+    "shortName": "Jazz",
+    "abbreviation": "UTA",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Northwest",
+    "arena": "Delta Center",
+    "colors": {
+      "primary": "#002B5C",
+      "secondary": "#00471B",
+      "text": "#FFF21F"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/uta.png",
+    "prestige": 69,
+    "ratingOffense": 76,
+    "ratingDefense": 73,
+    "ratingPace": 99.6
+  },
+  {
+    "id": "gsw-warriors",
+    "name": "Golden State Warriors",
+    "shortName": "Warriors",
+    "abbreviation": "GSW",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Pacific",
+    "arena": "Chase Center",
+    "colors": {
+      "primary": "#1D428A",
+      "secondary": "#FFC72C",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/gsw.png",
+    "prestige": 91,
+    "ratingOffense": 86,
+    "ratingDefense": 82,
+    "ratingPace": 100.2
+  },
+  {
+    "id": "lac-clippers",
+    "name": "LA Clippers",
+    "shortName": "Clippers",
+    "abbreviation": "LAC",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Pacific",
+    "arena": "Intuit Dome",
+    "colors": {
+      "primary": "#C8102E",
+      "secondary": "#1D428A",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/lac.png",
+    "prestige": 84,
+    "ratingOffense": 83,
+    "ratingDefense": 84,
+    "ratingPace": 97.1
+  },
+  {
+    "id": "lal-lakers",
+    "name": "Los Angeles Lakers",
+    "shortName": "Lakers",
+    "abbreviation": "LAL",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Pacific",
+    "arena": "Crypto.com Arena",
+    "colors": {
+      "primary": "#552583",
+      "secondary": "#FDB927",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/lal.png",
+    "prestige": 96,
+    "ratingOffense": 85,
+    "ratingDefense": 83,
+    "ratingPace": 100.8
+  },
+  {
+    "id": "phx-suns",
+    "name": "Phoenix Suns",
+    "shortName": "Suns",
+    "abbreviation": "PHX",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Pacific",
+    "arena": "Footprint Center",
+    "colors": {
+      "primary": "#1D1160",
+      "secondary": "#E56020",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/phx.png",
+    "prestige": 85,
+    "ratingOffense": 86,
+    "ratingDefense": 81,
+    "ratingPace": 98.7
+  },
+  {
+    "id": "sac-kings",
+    "name": "Sacramento Kings",
+    "shortName": "Kings",
+    "abbreviation": "SAC",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Pacific",
+    "arena": "Golden 1 Center",
+    "colors": {
+      "primary": "#5A2D81",
+      "secondary": "#63727A",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/sac.png",
+    "prestige": 82,
+    "ratingOffense": 85,
+    "ratingDefense": 80,
+    "ratingPace": 100.0
+  },
+  {
+    "id": "dal-mavericks",
+    "name": "Dallas Mavericks",
+    "shortName": "Mavericks",
+    "abbreviation": "DAL",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Southwest",
+    "arena": "American Airlines Center",
+    "colors": {
+      "primary": "#00538C",
+      "secondary": "#002B5E",
+      "text": "#B8C4CA"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/dal.png",
+    "prestige": 90,
+    "ratingOffense": 88,
+    "ratingDefense": 83,
+    "ratingPace": 99.4
+  },
+  {
+    "id": "hou-rockets",
+    "name": "Houston Rockets",
+    "shortName": "Rockets",
+    "abbreviation": "HOU",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Southwest",
+    "arena": "Toyota Center",
+    "colors": {
+      "primary": "#CE1141",
+      "secondary": "#000000",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/hou.png",
+    "prestige": 84,
+    "ratingOffense": 81,
+    "ratingDefense": 88,
+    "ratingPace": 99.2
+  },
+  {
+    "id": "mem-grizzlies",
+    "name": "Memphis Grizzlies",
+    "shortName": "Grizzlies",
+    "abbreviation": "MEM",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Southwest",
+    "arena": "FedExForum",
+    "colors": {
+      "primary": "#5D76A9",
+      "secondary": "#12173F",
+      "text": "#F5B112"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/mem.png",
+    "prestige": 83,
+    "ratingOffense": 83,
+    "ratingDefense": 85,
+    "ratingPace": 101.0
+  },
+  {
+    "id": "nop-pelicans",
+    "name": "New Orleans Pelicans",
+    "shortName": "Pelicans",
+    "abbreviation": "NOP",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Southwest",
+    "arena": "Smoothie King Center",
+    "colors": {
+      "primary": "#0C2340",
+      "secondary": "#C8102E",
+      "text": "#85714D"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/nop.png",
+    "prestige": 79,
+    "ratingOffense": 80,
+    "ratingDefense": 81,
+    "ratingPace": 98.6
+  },
+  {
+    "id": "sas-spurs",
+    "name": "San Antonio Spurs",
+    "shortName": "Spurs",
+    "abbreviation": "SAS",
+    "league": "NBA",
+    "conference": "Western",
+    "division": "Southwest",
+    "arena": "Frost Bank Center",
+    "colors": {
+      "primary": "#C4CED4",
+      "secondary": "#000000",
+      "text": "#FFFFFF"
+    },
+    "logoUrl": "https://a.espncdn.com/i/teamlogos/nba/500/sas.png",
+    "prestige": 85,
+    "ratingOffense": 79,
+    "ratingDefense": 84,
+    "ratingPace": 101.2
+  }
+]

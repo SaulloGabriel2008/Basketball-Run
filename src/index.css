@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-app: #0a0c0f;
+  --bg-card: #13171f;
+  --bg-card-hover: #1c222e;
+  --border-app: #2b3345;
+  --text-primary: #f0f3f8;
+  --text-secondary: #8a96a8;
+
+  /* Variáveis Dinâmicas Injetadas pelo Modelo da Franquia Ativa */
+  --team-primary: #007A33;
+  --team-secondary: #BA9653;
+  --team-contrast: #FFFFFF;
+  --team-glow: rgba(0, 122, 51, 0.25);
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Tipografia e cabeçalhos condensados */
+.data-table-header {
+  border-bottom: 2px solid var(--team-primary);
+  color: var(--text-primary);
+  font-family: 'Barlow Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Números tabulares monoespaçados estritos para alinhamento em colunas */
+.stat-cell-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  text-align: right;
+}
+
+/* Barra de rolagem estilizada Dark Sports */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0c0f;
+}
+::-webkit-scrollbar-thumb {
+  background: #2b3345;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--team-primary);
+}
+
+/* Bordas luminosas temáticas */
+.border-team {
+  border-color: var(--team-primary);
+}
+
+.glow-team {
+  box-shadow: 0 0 25px -4px var(--team-glow);
+}
+
+.bg-team-gradient {
+  background: linear-gradient(135deg, rgba(19, 23, 31, 0.95) 0%, rgba(28, 34, 46, 0.8) 100%);
+  border: 1px solid var(--border-app);
+}
+
+.bg-team-active {
+  background-color: var(--team-primary);
+  color: var(--team-contrast);
+}
