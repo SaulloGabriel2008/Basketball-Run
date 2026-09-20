@@ -10,7 +10,11 @@ import {
   Position, 
   PlayerAttributes,
   TeamEntity,
-  CountryInfo
+  CountryInfo,
+  PlayoffBracket, 
+  SeasonAwardsGala, 
+  AwardType, 
+  ContractOffer
 } from '../types';
 import { NBA_TEAMS, NCAA_TEAMS, G_LEAGUE_TEAMS, getTeamById, getGLeagueAffiliate, getParentNbaTeam } from '../data/teamsRepository';
 import { CAREER_SHOP_ITEMS } from '../data/careerShop';
@@ -21,6 +25,9 @@ import { calculateDraftStock, simulateDraftLottery } from '../engine/draftLotter
 import { calculateHallOfFameProbability } from '../engine/hallOfFame';
 import { getRandomCareerEvent, applyEventChoice } from '../engine/eventsManager';
 import { calculateTS, calculateEFG, calculateUSG, calculatePER, calculateWinShares } from '../engine/advancedMetrics';
+import { calculateSeasonAwards } from '../engine/awardsManager';
+import { initializePlayoffBracket, advancePlayoffBracket } from '../engine/playoffsEngine';
+import { generateContractOffers, generateTradeOptions } from '../engine/freeAgency';
 import { savePlayerCareer, loadLatestCareer, exportSaveToJson, importSaveFromJson } from '../services/db';
 import { round } from '../engine/mathUtils';
 
@@ -44,6 +51,12 @@ interface GameState {
   isSimulating: boolean;
   simProgress: { completed: number; total: number } | null;
   isSeasonEndModalOpen: boolean;
+  playoffBracket: PlayoffBracket | null;
+  isPlayoffsModalOpen: boolean;
+  awardsGala: SeasonAwardsGala | null;
+  isAwardsModalOpen: boolean;
+  contractOffers: ContractOffer[];
+  isContractModalOpen: boolean;
   nbaStandings: StandingsEntry[];
   ncaaStandings: StandingsEntry[];
   gleagueStandings: StandingsEntry[];
@@ -54,6 +67,17 @@ interface GameState {
   setScreen: (screen: ScreenType) => void;
   openSeasonEndModal: () => void;
   closeSeasonEndModal: () => void;
+  openPlayoffsModal: () => void;
+  closePlayoffsModal: () => void;
+  advancePlayoffs: () => void;
+  simulateEntirePlayoffs: () => void;
+  openAwardsModal: () => void;
+  closeAwardsModal: () => void;
+  revealAward: (awardType: AwardType) => void;
+  openContractModal: () => void;
+  closeContractModal: () => void;
+  acceptContractOffer: (offer: ContractOffer) => void;
+  requestTrade: () => void;
   advanceToNextNbaSeason: () => void;
   buyShopItem: (itemId: string) => void;
   createNewPlayer: (data: {
@@ -113,6 +137,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   isSimulating: false,
   simProgress: null,
   isSeasonEndModalOpen: false,
+  playoffBracket: null,
+  isPlayoffsModalOpen: false,
+  awardsGala: null,
+  isAwardsModalOpen: false,
+  contractOffers: [],
+  isContractModalOpen: false,
   nbaStandings: createInitialStandings('NBA'),
   ncaaStandings: createInitialStandings('NCAA'),
   gleagueStandings: createInitialStandings('G_LEAGUE'),
@@ -122,6 +152,136 @@ export const useGameStore = create<GameState>((set, get) => ({
   setScreen: (screen) => set({ currentScreen: screen }),
   openSeasonEndModal: () => set({ isSeasonEndModalOpen: true }),
   closeSeasonEndModal: () => set({ isSeasonEndModalOpen: false }),
+
+  openPlayoffsModal: () => set({ isPlayoffsModalOpen: true }),
+  closePlayoffsModal: () => set({ isPlayoffsModalOpen: false }),
+  advancePlayoffs: () => {
+    const { playoffBracket, player } = get();
+    if (!playoffBracket) return;
+    const updated = advancePlayoffBracket(playoffBracket, player);
+    
+    if (updated.isCompleted && player && updated.championTeamId === player.currentTeamId) {
+      const pCopy: PlayerEntity = JSON.parse(JSON.stringify(player));
+      pCopy.careerRecord.championships += 1;
+      if (!pCopy.trophyCase.includes(`Campeão da NBA (${updated.seasonYear})`)) {
+        pCopy.trophyCase.push(`Campeão da NBA (${updated.seasonYear})`);
+      }
+      if (updated.finalsMvpName === player.fullName) {
+        pCopy.careerRecord.finalsMvps += 1;
+        pCopy.trophyCase.push(`MVP das Finais (${updated.seasonYear})`);
+      }
+      set({ player: pCopy });
+    }
+
+    set({ playoffBracket: updated });
+  },
+
+  simulateEntirePlayoffs: () => {
+    const { playoffBracket, player } = get();
+    if (!playoffBracket) return;
+    let curr = playoffBracket;
+    while (!curr.isCompleted) {
+      curr = advancePlayoffBracket(curr, player);
+    }
+    
+    if (player && curr.championTeamId === player.currentTeamId) {
+      const pCopy: PlayerEntity = JSON.parse(JSON.stringify(player));
+      pCopy.careerRecord.championships += 1;
+      if (!pCopy.trophyCase.includes(`Campeão da NBA (${curr.seasonYear})`)) {
+        pCopy.trophyCase.push(`Campeão da NBA (${curr.seasonYear})`);
+      }
+      if (curr.finalsMvpName === player.fullName) {
+        pCopy.careerRecord.finalsMvps += 1;
+        pCopy.trophyCase.push(`MVP das Finais (${curr.seasonYear})`);
+      }
+      set({ player: pCopy });
+    }
+
+    set({ playoffBracket: curr });
+  },
+
+  openAwardsModal: () => set({ isAwardsModalOpen: true }),
+  closeAwardsModal: () => set({ isAwardsModalOpen: false }),
+  revealAward: (awardType: AwardType) => {
+    const { awardsGala, player } = get();
+    if (!awardsGala || !player) return;
+    const copy: SeasonAwardsGala = JSON.parse(JSON.stringify(awardsGala));
+    if (copy.awards[awardType]) {
+      copy.awards[awardType].isRevealed = true;
+      if (copy.awards[awardType].userWon) {
+        const pCopy: PlayerEntity = JSON.parse(JSON.stringify(player));
+        if (awardType === 'MVP') {
+          pCopy.careerRecord.mvps += 1;
+          pCopy.trophyCase.push(`MVP da NBA (${copy.seasonYear})`);
+        } else if (awardType === 'DPOY') {
+          pCopy.careerRecord.dpoyAwards += 1;
+          pCopy.trophyCase.push(`Defensor do Ano (${copy.seasonYear})`);
+        } else {
+          pCopy.trophyCase.push(`${copy.awards[awardType].name} (${copy.seasonYear})`);
+        }
+        set({ player: pCopy });
+      }
+    }
+    set({ awardsGala: copy });
+  },
+
+  openContractModal: () => set({ isContractModalOpen: true }),
+  closeContractModal: () => set({ isContractModalOpen: false }),
+  acceptContractOffer: (offer: ContractOffer) => {
+    const { player } = get();
+    if (!player) return;
+    const updated: PlayerEntity = JSON.parse(JSON.stringify(player));
+    updated.currentTeamId = offer.teamId;
+    updated.contract = {
+      type: 'STANDARD_NBA',
+      yearsTotal: offer.yearsTotal,
+      yearsRemaining: offer.yearsTotal,
+      salaryPerYear: offer.salaryPerYear,
+    };
+    const newTeam = getTeamById(offer.teamId);
+    if (newTeam) applyDynamicTheme(newTeam);
+
+    const news: NewsItem = {
+      id: `contract-news-${Date.now()}`,
+      date: `Intertemporada ${updated.seasonStats.seasonYear}`,
+      headline: `${updated.fullName} assina com o ${offer.teamName}!`,
+      content: `Contrato de ${offer.yearsTotal} temporadas no valor de ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(offer.salaryPerYear)} por ano. O jogador assume o papel de ${offer.role.replace(/_/g, ' ')}.`,
+      category: 'TRANSACTION',
+      teamId: offer.teamId,
+    };
+
+    set(state => ({
+      player: updated,
+      isContractModalOpen: false,
+      newsFeed: [news, ...state.newsFeed],
+    }));
+  },
+
+  requestTrade: () => {
+    const { player } = get();
+    if (!player) return;
+    const options = generateTradeOptions(player);
+    if (options.length === 0) return;
+    const chosen = options[0];
+    const updated: PlayerEntity = JSON.parse(JSON.stringify(player));
+    updated.currentTeamId = chosen.teamId;
+    const newTeam = getTeamById(chosen.teamId);
+    if (newTeam) applyDynamicTheme(newTeam);
+
+    const news: NewsItem = {
+      id: `trade-news-${Date.now()}`,
+      date: `Trade Deadline`,
+      headline: `BOMBA: ${updated.fullName} é trocado para o ${chosen.teamName}!`,
+      content: `Após solicitação formal de troca, a diretoria fechou um acordo envolvendo escolhas futuras de draft e ativos jovens.`,
+      category: 'TRANSACTION',
+      teamId: chosen.teamId,
+    };
+
+    set(state => ({
+      player: updated,
+      newsFeed: [news, ...state.newsFeed],
+    }));
+  },
 
   createNewPlayer: (data) => {
     const ovr = calculateOverall(data.initialAttributes, data.position);
@@ -386,6 +546,42 @@ export const useGameStore = create<GameState>((set, get) => ({
       newsFeed: [gameNews, ...state.newsFeed.slice(0, 29)],
       activeEvent: triggeredEvent || state.activeEvent,
     }));
+
+    // Se simulação individual atingiu o fim da temporada
+    if (!get().isSimulating) {
+      const maxG = updatedPlayer.currentLeague === 'NCAA' ? 32 : updatedPlayer.currentLeague === 'G_LEAGUE' ? 50 : 82;
+      if (updatedPlayer.seasonStats.gamesPlayed >= maxG) {
+        const earnedSalary = updatedPlayer.contract.salaryPerYear || 0;
+        const passiveIncome = CAREER_SHOP_ITEMS
+          .filter(item => updatedPlayer.purchasedItemIds?.includes(item.id) && item.yearlyPassiveIncome)
+          .reduce((acc, cur) => acc + (cur.yearlyPassiveIncome || 0), 0);
+
+        const updated: PlayerEntity = JSON.parse(JSON.stringify(updatedPlayer));
+        updated.bankBalance = (updated.bankBalance || 0) + earnedSalary + passiveIncome;
+
+        let gala: SeasonAwardsGala | null = null;
+        let bracket: PlayoffBracket | null = null;
+        let offers: ContractOffer[] = [];
+
+        if (updated.currentLeague === 'NBA') {
+          const teamWinsMap: Record<string, number> = {};
+          get().nbaStandings.forEach(st => {
+            teamWinsMap[st.teamId] = st.wins;
+          });
+          gala = calculateSeasonAwards(updated, teamWinsMap);
+          bracket = initializePlayoffBracket(updated.seasonStats.seasonYear, get().nbaStandings, updated.currentTeamId);
+          offers = generateContractOffers(updated);
+        }
+
+        set({
+          player: updated,
+          isSeasonEndModalOpen: true,
+          awardsGala: gala,
+          playoffBracket: bracket,
+          contractOffers: offers,
+        });
+      }
+    }
   },
 
   simulateBatchGames: async (numGames: number) => {
@@ -412,9 +608,26 @@ export const useGameStore = create<GameState>((set, get) => ({
         const updated: PlayerEntity = JSON.parse(JSON.stringify(currentP));
         updated.bankBalance = (updated.bankBalance || 0) + earnedSalary + passiveIncome;
 
+        let gala: SeasonAwardsGala | null = null;
+        let bracket: PlayoffBracket | null = null;
+        let offers: ContractOffer[] = [];
+
+        if (updated.currentLeague === 'NBA') {
+          const teamWinsMap: Record<string, number> = {};
+          get().nbaStandings.forEach(st => {
+            teamWinsMap[st.teamId] = st.wins;
+          });
+          gala = calculateSeasonAwards(updated, teamWinsMap);
+          bracket = initializePlayoffBracket(updated.seasonStats.seasonYear, get().nbaStandings, updated.currentTeamId);
+          offers = generateContractOffers(updated);
+        }
+
         set({
           player: updated,
           isSeasonEndModalOpen: true,
+          awardsGala: gala,
+          playoffBracket: bracket,
+          contractOffers: offers,
         });
       }
     }
@@ -524,6 +737,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set({ 
       player: updatedPlayer, 
+      ncaaStandings: createInitialStandings('NCAA'),
       currentScreen: 'DASHBOARD',
       isSeasonEndModalOpen: false 
     });
@@ -620,6 +834,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     set(state => ({
       player: updatedPlayer,
+      nbaStandings: createInitialStandings('NBA'),
       currentScreen: 'DASHBOARD',
       newsFeed: [draftNews, ...state.newsFeed],
     }));
@@ -730,6 +945,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     set(state => ({
       player: updatedPlayer,
       isSeasonEndModalOpen: false,
+      isPlayoffsModalOpen: false,
+      isAwardsModalOpen: false,
+      isContractModalOpen: false,
+      awardsGala: null,
+      playoffBracket: null,
+      contractOffers: [],
+      nbaStandings: createInitialStandings('NBA'),
       currentScreen: 'DASHBOARD',
       newsFeed: [startNews, ...state.newsFeed],
     }));

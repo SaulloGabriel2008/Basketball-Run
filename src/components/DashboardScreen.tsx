@@ -1,6 +1,7 @@
 import React from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getTeamById } from '../data/teamsRepository';
+import { getTeamConferenceRank } from '../engine/playoffsEngine';
 import { TeamLogo } from './TeamLogo';
 import { canAssignToGLeague } from '../engine/contracts';
 import { 
@@ -18,7 +19,9 @@ import {
   Wallet,
   ShoppingBag,
   ArrowRight,
-  AlertTriangle
+  AlertTriangle,
+  Trophy,
+  Shuffle
 } from 'lucide-react';
 
 export const DashboardScreen: React.FC = () => {
@@ -40,7 +43,14 @@ export const DashboardScreen: React.FC = () => {
     stayInCollegeAnotherYear,
     assignToGLeagueAction,
     recallFromGLeagueAction,
-    retireAndInduct
+    retireAndInduct,
+    openPlayoffsModal,
+    openAwardsModal,
+    openContractModal,
+    requestTrade,
+    playoffBracket,
+    awardsGala,
+    contractOffers
   } = useGameStore();
 
   if (!player) return null;
@@ -62,6 +72,8 @@ export const DashboardScreen: React.FC = () => {
 
   const myTeamStanding = (isCollege ? ncaaStandings : isGLeague ? gleagueStandings : nbaStandings)
     .find(team => team.teamId === player.currentTeamId);
+
+  const confRank = isNba ? getTeamConferenceRank(player.currentTeamId, nbaStandings) : null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -131,6 +143,20 @@ export const DashboardScreen: React.FC = () => {
               <div className="text-xs font-mono text-team-primary font-bold mt-1">
                 {currentTeam?.name} ({player.currentLeague})
               </div>
+              {confRank && (
+                <div className={`mt-2.5 flex items-center justify-between text-[11px] font-mono p-2 rounded border ${
+                  confRank.madePlayoffs
+                    ? 'bg-emerald-950/30 border-emerald-800/50 text-emerald-300'
+                    : 'bg-red-950/30 border-red-900/50 text-red-300'
+                }`}>
+                  <span className="font-bold">
+                    {confRank.rank}º no {confRank.conference === 'Eastern' ? 'Leste' : 'Oeste'}
+                  </span>
+                  <span className="text-[10px] font-semibold">
+                    {confRank.madePlayoffs ? '🟢 Top 8 (Playoffs)' : '🔴 Fora dos Playoffs'}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Saldo Bancário e Informações Contratuais */}
@@ -240,6 +266,22 @@ export const DashboardScreen: React.FC = () => {
               </button>
             )}
 
+            {isNba && (
+              <button
+                onClick={() => {
+                  if (window.confirm(`Deseja solicitar formalmente uma troca da equipe ${currentTeam?.name}? A diretoria buscará propostas no mercado da NBA.`)) {
+                    requestTrade();
+                  }
+                }}
+                disabled={isSimulating}
+                className="w-full py-2 px-3 bg-[#1c222e] hover:bg-cyan-950/40 border border-cyan-800/40 hover:border-cyan-600 text-xs font-mono text-cyan-300 rounded transition-all flex items-center justify-center gap-1.5"
+                title="Solicitar transferência para outra equipe da NBA"
+              >
+                <Shuffle className="w-3.5 h-3.5" />
+                🔄 Solicitar Troca (Trade Request)
+              </button>
+            )}
+
             {isNba && player.age >= 32 && (
               <button
                 onClick={retireAndInduct}
@@ -337,21 +379,52 @@ export const DashboardScreen: React.FC = () => {
                       </button>
                     </>
                   ) : (
-                    <>
+                    <div className="flex flex-wrap items-center gap-2.5 w-full">
+                      {awardsGala && (
+                        <button
+                          onClick={openAwardsModal}
+                          className="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/60 text-amber-300 font-condensed font-bold uppercase tracking-wider text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/10"
+                        >
+                          <Award className="w-4 h-4 text-amber-400" />
+                          🏆 Gala de Prêmios da NBA (TOP 3)
+                        </button>
+                      )}
+
+                      {playoffBracket && (
+                        <button
+                          onClick={openPlayoffsModal}
+                          className="px-4 py-2.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/60 text-blue-300 font-condensed font-bold uppercase tracking-wider text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/10"
+                        >
+                          <Trophy className="w-4 h-4 text-blue-400" />
+                          🏀 Playoffs da NBA {playoffBracket.isCompleted ? '(Concluídos)' : '(Mata-Mata)'}
+                        </button>
+                      )}
+
+                      {contractOffers && contractOffers.length > 0 && (
+                        <button
+                          onClick={openContractModal}
+                          className="px-4 py-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/60 text-emerald-300 font-condensed font-bold uppercase tracking-wider text-xs rounded-lg transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/10"
+                        >
+                          <Wallet className="w-4 h-4 text-emerald-400" />
+                          📝 Propostas de Contrato ({contractOffers.length})
+                        </button>
+                      )}
+
+                      <button
+                        onClick={openSeasonEndModal}
+                        className="px-4 py-2.5 bg-[#1c222e] hover:bg-[#2b3345] text-white text-xs font-condensed font-bold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center gap-2"
+                      >
+                        📊 Resumo da Temporada & Finanças
+                      </button>
+
                       <button
                         onClick={advanceToNextNbaSeason}
-                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs font-condensed uppercase tracking-wider rounded-lg shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
+                        className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs font-condensed uppercase tracking-wider rounded-lg shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
                       >
                         <ArrowRight className="w-4 h-4 stroke-[3]" />
                         Avançar para a Próxima Temporada ({s.seasonYear + 1})
                       </button>
-                      <button
-                        onClick={openSeasonEndModal}
-                        className="px-4 py-3 bg-[#1c222e] hover:bg-[#2b3345] text-white text-xs font-condensed font-bold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center gap-2"
-                      >
-                        📊 Resumo da Temporada & Finanças
-                      </button>
-                    </>
+                    </div>
                   )}
                 </div>
               )}

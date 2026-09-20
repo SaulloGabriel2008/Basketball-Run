@@ -11,6 +11,9 @@ import { DraftCeremonyModal } from './components/DraftCeremonyModal';
 import { RetirementCeremonyModal } from './components/RetirementCeremonyModal';
 import { SeasonEndRecapModal } from './components/SeasonEndRecapModal';
 import { EventModal } from './components/EventModal';
+import { AwardsCeremonyModal } from './components/AwardsCeremonyModal';
+import { PlayoffsModal } from './components/PlayoffsModal';
+import { ContractOffersModal } from './components/ContractOffersModal';
 
 export const App: React.FC = () => {
   const { player, currentScreen, loadFromIndexedDb } = useGameStore();
@@ -62,6 +65,9 @@ export const App: React.FC = () => {
       {currentScreen === 'RETIREMENT' && <RetirementCeremonyModal />}
       <SeasonEndRecapModal />
       <EventModal />
+      <PlayoffsModal />
+      <AwardsCeremonyModal />
+      <ContractOffersModal />
 
       {/* Rodapé Informativo */}
       <footer className="border-t border-[#2b3345] py-4 px-4 text-center font-mono text-[11px] text-[#8a96a8] bg-[#0a0c0f]">

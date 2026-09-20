@@ -336,3 +336,113 @@ export interface StandingsEntry {
   pointsFor: number;
   pointsAgainst: number;
 }
+
+// ----------------------------------------------------
+// PLAYOFFS & PÓS-TEMPORADA
+// ----------------------------------------------------
+export interface PlayoffMatchup {
+  id: string;
+  round: 1 | 2 | 3 | 4; // 1=R1, 2=Semis, 3=ConfFinals, 4=NBA Finals
+  conference: 'Eastern' | 'Western' | 'Finals';
+  highSeedTeamId: string;
+  lowSeedTeamId: string;
+  highSeedWins: number;
+  lowSeedWins: number;
+  winnerTeamId?: string;
+  isUserInvolved: boolean;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
+}
+
+export interface PlayoffBracket {
+  seasonYear: number;
+  easternR1: PlayoffMatchup[];
+  westernR1: PlayoffMatchup[];
+  easternSemis: PlayoffMatchup[];
+  westernSemis: PlayoffMatchup[];
+  easternConfFinals: PlayoffMatchup;
+  westernConfFinals: PlayoffMatchup;
+  nbaFinals: PlayoffMatchup;
+  championTeamId?: string;
+  finalsMvpName?: string;
+  isCompleted: boolean;
+}
+
+// ----------------------------------------------------
+// PREMIAÇÕES DA NBA & GALA COM TOP 3 E SUSPENSE
+// ----------------------------------------------------
+export type AwardType = 'MVP' | 'DPOY' | 'ROTY' | 'SIXTH_MAN' | 'MIP' | 'CLUTCH' | 'FINALS_MVP';
+
+export interface AwardNominee {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  position: Position;
+  statsSummary: string;
+  totalPoints: number;
+  firstPlaceVotes: number;
+  rank: number;
+  isUser: boolean;
+}
+
+export interface AwardResult {
+  type: AwardType;
+  name: string;
+  trophyName: string;
+  emoji: string;
+  winner: AwardNominee;
+  top3: AwardNominee[];
+  userRank?: number;
+  userWasTop3: boolean;
+  userWon: boolean;
+  isRevealed: boolean;
+}
+
+export interface AllStarSelection {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  position: Position;
+  isStarter: boolean;
+  isUser: boolean;
+}
+
+export interface AllNbaSelection {
+  playerId: string;
+  playerName: string;
+  teamId: string;
+  position: Position;
+  teamGrade: 'FIRST' | 'SECOND' | 'THIRD';
+  isUser: boolean;
+}
+
+export interface SeasonAwardsGala {
+  seasonYear: number;
+  awards: Record<AwardType, AwardResult>;
+  allStarEast: AllStarSelection[];
+  allStarWest: AllStarSelection[];
+  allNbaTeams: {
+    first: AllNbaSelection[];
+    second: AllNbaSelection[];
+    third: AllNbaSelection[];
+  };
+  allDefensiveTeams: {
+    first: AllNbaSelection[];
+    second: AllNbaSelection[];
+  };
+  allRookieTeam: AllNbaSelection[];
+}
+
+// ----------------------------------------------------
+// MERCADO DE CONTRATOS, RENOVAÇÃO & FREE AGENCY
+// ----------------------------------------------------
+export interface ContractOffer {
+  id: string;
+  teamId: string;
+  teamName: string;
+  salaryPerYear: number;
+  yearsTotal: number;
+  role: 'FRANCHISE_CORNERSTONE' | 'STARTER' | 'SIXTH_MAN';
+  isExtension: boolean;
+  pitchMessage: string;
+  teamPrestige: number;
+}

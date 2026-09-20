@@ -1,12 +1,14 @@
 import React from 'react';
 import { useGameStore } from '../store/gameStore';
 import { getTeamById } from '../data/teamsRepository';
+import { getTeamConferenceRank } from '../engine/playoffsEngine';
 import { 
   ArrowRight, 
   GraduationCap, 
   Award, 
   Calendar,
   DollarSign,
+  Trophy,
   X
 } from 'lucide-react';
 
@@ -17,7 +19,14 @@ export const SeasonEndRecapModal: React.FC = () => {
     closeSeasonEndModal,
     declareForNbaDraft, 
     stayInCollegeAnotherYear,
-    advanceToNextNbaSeason
+    advanceToNextNbaSeason,
+    openAwardsModal,
+    openPlayoffsModal,
+    openContractModal,
+    awardsGala,
+    playoffBracket,
+    contractOffers,
+    nbaStandings
   } = useGameStore();
 
   if (!isSeasonEndModalOpen || !player) return null;
@@ -61,6 +70,28 @@ export const SeasonEndRecapModal: React.FC = () => {
             <span>{s.gamesPlayed} partidas disputadas</span>
           </div>
         </div>
+
+        {/* Classificação Final na Conferência da NBA */}
+        {!isCollege && (
+          (() => {
+            const confRank = getTeamConferenceRank(player.currentTeamId, nbaStandings);
+            return (
+              <div className={`p-3 rounded-xl border text-xs font-mono flex flex-col sm:flex-row items-center justify-between gap-2 ${
+                confRank.madePlayoffs
+                  ? 'bg-emerald-950/30 border-emerald-700/50 text-emerald-300'
+                  : 'bg-red-950/30 border-red-800/50 text-red-300'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold uppercase text-white">Classificação Final:</span>
+                  <span>{confRank.rank}º no {confRank.conference === 'Eastern' ? 'Leste' : 'Oeste'} ({confRank.wins}V - {confRank.losses}D)</span>
+                </div>
+                <span className="font-bold">
+                  {confRank.madePlayoffs ? '🟢 Classificado aos Playoffs' : '🔴 Fora dos Playoffs'}
+                </span>
+              </div>
+            );
+          })()
+        )}
 
         {/* Linha Estatística Consolidada */}
         <div className="bg-[#0a0c0f] border border-[#2b3345] rounded-xl p-4">
@@ -143,14 +174,51 @@ export const SeasonEndRecapModal: React.FC = () => {
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={advanceToNextNbaSeason}
-              className="w-full py-4 px-6 rounded-xl bg-team-primary text-white font-condensed font-black uppercase tracking-wider text-lg hover:opacity-95 shadow-team-glow transition-all flex items-center justify-center gap-2"
-            >
-              Avançar para a Próxima Temporada ({s.seasonYear + 1})
-              <ArrowRight className="w-5 h-5" />
-            </button>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {awardsGala && (
+                  <button
+                    type="button"
+                    onClick={openAwardsModal}
+                    className="py-3 px-3 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/50 text-xs font-condensed font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md shadow-amber-500/10"
+                  >
+                    <Award className="w-4 h-4 text-amber-400" />
+                    🏆 Prêmios & TOP 3
+                  </button>
+                )}
+
+                {playoffBracket && (
+                  <button
+                    type="button"
+                    onClick={openPlayoffsModal}
+                    className="py-3 px-3 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 border border-blue-500/50 text-xs font-condensed font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-500/10"
+                  >
+                    <Trophy className="w-4 h-4 text-blue-400" />
+                    🏀 Playoffs da NBA
+                  </button>
+                )}
+
+                {contractOffers && contractOffers.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={openContractModal}
+                    className="py-3 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/50 text-xs font-condensed font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/10"
+                  >
+                    <DollarSign className="w-4 h-4 text-emerald-400" />
+                    📝 Contratos ({contractOffers.length})
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={advanceToNextNbaSeason}
+                className="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-condensed font-black uppercase tracking-wider text-base shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center gap-2"
+              >
+                Avançar para a Próxima Temporada ({s.seasonYear + 1})
+                <ArrowRight className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            </div>
           )}
         </div>
       </div>

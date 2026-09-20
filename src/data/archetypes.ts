@@ -7,6 +7,9 @@ export interface ArchetypeDefinition {
   tagline: string;
   description: string;
   badgeColor: string;
+  emoji: string;
+  gradient: string;
+  playStyleHighlights: string[];
   boostedAttributes: Partial<PlayerAttributes>;
 }
 
@@ -17,6 +20,9 @@ export const ARCHETYPES: Record<Archetype, ArchetypeDefinition> = {
     tagline: 'Gatilho de Elite do Perímetro',
     description: 'Especialista letal no tiro de 3 pontos, bolas em catch-and-shoot e espaçamento ofensivo.',
     badgeColor: '#F59E0B',
+    emoji: '🎯',
+    gradient: 'from-amber-500/20 via-orange-500/10 to-transparent',
+    playStyleHighlights: ['Catch & Shoot 3PT', 'Espaçamento de Quadra', 'Precisão no Clutch'],
     boostedAttributes: {
       threePoint: 88,
       midRange: 82,
@@ -31,6 +37,9 @@ export const ARCHETYPES: Record<Archetype, ArchetypeDefinition> = {
     tagline: 'Criador Tático Primário',
     description: 'Mestre do drible e controle de ritmo, visão periférica de passe e leitura refinada de pick & roll.',
     badgeColor: '#3B82F6',
+    emoji: '🧠',
+    gradient: 'from-blue-500/20 via-indigo-500/10 to-transparent',
+    playStyleHighlights: ['Visão de Passe 360°', 'Drible Desestabilizador', 'Pick & Roll Maestro'],
     boostedAttributes: {
       passing: 88,
       ballControl: 88,
@@ -45,6 +54,9 @@ export const ARCHETYPES: Record<Archetype, ArchetypeDefinition> = {
     tagline: 'Cão de Caça Perimetral',
     description: 'Especialista em sufocar as principais armas adversárias, cortar linhas de passe e forçar erros.',
     badgeColor: '#10B981',
+    emoji: '🔒',
+    gradient: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+    playStyleHighlights: ['Roubos em Transição', 'Sufoco 1 contra 1', 'Pressão Defensiva 94ft'],
     boostedAttributes: {
       perimeterDefense: 88,
       steal: 85,
@@ -59,78 +71,96 @@ export const ARCHETYPES: Record<Archetype, ArchetypeDefinition> = {
     tagline: 'Agressor Explosivo do Aro',
     description: 'Primeiro passo veloz, ataque implacável ao aro em velocidade e enterradas acrobáticas.',
     badgeColor: '#EF4444',
+    emoji: '⚡',
+    gradient: 'from-red-500/20 via-rose-500/10 to-transparent',
+    playStyleHighlights: ['Enterradas no Tráfego', 'Infiltração Explosiva', 'Cavador de Faltas no Aro'],
     boostedAttributes: {
-      slashing: 89,
-      inside: 84,
+      slashing: 88,
       speed: 87,
       vertical: 88,
       acceleration: 86,
+      inside: 84,
     },
   },
   POST_SCORER: {
     id: 'POST_SCORER',
     name: 'Post Scorer',
-    tagline: 'Mestre Clássico do Garrafão',
-    description: 'Jogo de pés polido de costas para a cesta, ganchos perfeitos e domínio físico na pintura.',
+    tagline: 'Mestre do Jogo de Costas',
+    description: 'Trabalho de pés impecável no garrafão, ganchos indefensáveis e finalizações com contato físico.',
     badgeColor: '#8B5CF6',
+    emoji: '🥋',
+    gradient: 'from-purple-500/20 via-violet-500/10 to-transparent',
+    playStyleHighlights: ['Ganchos Cirúrgicos', 'Trabalho de Pés no Garrafão', 'Finalização com Contato'],
     boostedAttributes: {
       inside: 88,
-      strength: 88,
+      strength: 86,
+      offensiveIQ: 84,
+      midRange: 80,
       offensiveRebound: 82,
-      midRange: 78,
-      interiorDefense: 78,
     },
   },
   PAINT_PROTECTOR: {
     id: 'PAINT_PROTECTOR',
     name: 'Paint Protector',
-    tagline: 'Muralha e Protetor de Aro',
-    description: 'Âncora defensiva de garrafão, contestador de arremessos, especialista em tocos e rebotes defensivos.',
-    badgeColor: '#06B6D4',
+    tagline: 'Muralha e Âncora do Aro',
+    description: 'Guardião intransponível da tábua defensiva, alterando arremessos e liderando rebotes.',
+    badgeColor: '#0EA5E9',
+    emoji: '🧱',
+    gradient: 'from-sky-500/20 via-cyan-500/10 to-transparent',
+    playStyleHighlights: ['Tocos Monumentais', 'Rebotes Protetivos', 'Intimidação no Garrafão'],
     boostedAttributes: {
-      interiorDefense: 89,
       block: 88,
+      interiorDefense: 88,
       defensiveRebound: 88,
-      strength: 85,
-      vertical: 80,
+      strength: 87,
+      defensiveIQ: 84,
     },
   },
   MID_RANGE_MAESTRO: {
     id: 'MID_RANGE_MAESTRO',
     name: 'Mid-Range Maestro',
-    tagline: 'Virtuoso da Meia Distância',
-    description: 'Arremesso clássico de parada brusca, fadeaway no post médio e frieza em momentos decisivos.',
-    badgeColor: '#D97706',
+    tagline: 'Cirurgião da Meia-Distância',
+    description: 'Especialista em criar separação com fadeaways, pull-ups mortais e arremessos fluidos da meia distância.',
+    badgeColor: '#EC4899',
+    emoji: '🗡️',
+    gradient: 'from-pink-500/20 via-rose-500/10 to-transparent',
+    playStyleHighlights: ['Fadeaway Indefensável', 'Pull-up no Drible', 'Isolamento 1 contra 1'],
     boostedAttributes: {
-      midRange: 89,
-      clutch: 85,
+      midRange: 90,
+      ballControl: 82,
+      offensiveIQ: 85,
+      clutch: 84,
       freeThrow: 86,
-      offensiveIQ: 83,
-      inside: 80,
     },
   },
   STRETCH_BIG: {
     id: 'STRETCH_BIG',
     name: 'Stretch Big',
     tagline: 'Pivô Espaçador Moderno',
-    description: 'Homem grande com pontaria exterior afiada no pick & pop, abrindo a quadra para infiltrações.',
-    badgeColor: '#EC4899',
+    description: 'Pivô alto com capacidade de punir defesas da linha de 3 pontos em situações de pick-and-pop.',
+    badgeColor: '#06B6D4',
+    emoji: '🏹',
+    gradient: 'from-cyan-500/20 via-blue-500/10 to-transparent',
+    playStyleHighlights: ['Pick & Pop de 3 Pontos', 'Abertura de Espaço', 'Rebotes Defensivos'],
     boostedAttributes: {
       threePoint: 84,
+      inside: 80,
+      defensiveRebound: 82,
+      strength: 82,
       midRange: 80,
-      defensiveRebound: 80,
-      interiorDefense: 76,
-      freeThrow: 82,
     },
   },
   POINT_FORWARD: {
     id: 'POINT_FORWARD',
     name: 'Point Forward',
-    tagline: 'Ala Facilitador Completo',
-    description: 'Porte físico de ala com inteligência e habilidade de armador principal criando para os colegas.',
-    badgeColor: '#6366F1',
+    tagline: 'Ala Armador Geracional',
+    description: 'Físico avantajado com visão de jogo de um armador, orquestrando contra-ataques com dominância física.',
+    badgeColor: '#EAB308',
+    emoji: '👑',
+    gradient: 'from-yellow-500/20 via-amber-500/10 to-transparent',
+    playStyleHighlights: ['Triplo-Duplo em Potencial', 'Condução no Transição', 'Criação para os Alas'],
     boostedAttributes: {
-      passing: 84,
+      passing: 85,
       ballControl: 84,
       offensiveIQ: 85,
       defensiveRebound: 78,
@@ -140,9 +170,12 @@ export const ARCHETYPES: Record<Archetype, ArchetypeDefinition> = {
   TWO_WAY_SPECIALIST: {
     id: 'TWO_WAY_SPECIALIST',
     name: 'Two-Way Specialist',
-    tagline: 'Especialista em Ambas as Extremidades',
-    description: 'Equilíbrio ideal entre produção ofensiva eficiente e compromisso defensivo incansável.',
+    tagline: 'Equilíbrio Total 3&D',
+    description: 'Impacto consistente nas duas metades da quadra: pontuação eficiente e defesa tenaz sem erros.',
     badgeColor: '#14B8A6',
+    emoji: '⚔️',
+    gradient: 'from-teal-500/20 via-emerald-500/10 to-transparent',
+    playStyleHighlights: ['Eficiência em Ambos os Lados', 'Arremessos Livres de 3', 'Defesa Sem Faltas'],
     boostedAttributes: {
       perimeterDefense: 84,
       threePoint: 82,
@@ -156,36 +189,36 @@ export const ARCHETYPES: Record<Archetype, ArchetypeDefinition> = {
 export const ARCHETYPES_CATALOG = Object.values(ARCHETYPES);
 
 /**
- * Gera um título estilizado de arquétipo híbrido
+ * Gera um título estilizado de arquétipo híbrido com emoji
  */
 export function getHybridArchetypeName(primary: Archetype, secondary: Archetype): string {
   if (primary === secondary) {
-    return `Puro ${ARCHETYPES[primary].name}`;
+    return `${ARCHETYPES[primary].emoji} ${ARCHETYPES[primary].name} Puro`;
   }
 
   const p = primary;
   const s = secondary;
 
-  if ((p === 'SHARPSHOOTER' && s === 'LOCKDOWN_DEFENDER') || (p === 'LOCKDOWN_DEFENDER' && s === 'SHARPSHOOTER')) {
-    return '3&D Perimetral de Elite';
+  if ((p === 'SHARPSHOOTER' && s === 'PLAYMAKER') || (p === 'PLAYMAKER' && s === 'SHARPSHOOTER')) {
+    return '🎯🧠 Armador Atirador Dinâmico';
   }
-  if ((p === 'PLAYMAKER' && s === 'SLASHER') || (p === 'SLASHER' && s === 'PLAYMAKER')) {
-    return 'Agressor Criador Explosivo';
+  if ((p === 'SLASHER' && s === 'PLAYMAKER') || (p === 'PLAYMAKER' && s === 'SLASHER')) {
+    return '⚡🧠 Infiltrador Criador Explosivo';
   }
-  if ((p === 'PLAYMAKER' && s === 'SHARPSHOOTER') || (p === 'SHARPSHOOTER' && s === 'PLAYMAKER')) {
-    return 'Playmaker Atirador Dinâmico';
+  if ((p === 'LOCKDOWN_DEFENDER' && s === 'SHARPSHOOTER') || (p === 'SHARPSHOOTER' && s === 'LOCKDOWN_DEFENDER')) {
+    return '🔒🎯 Especialista 3&D de Elite';
   }
-  if ((p === 'POST_SCORER' && s === 'PAINT_PROTECTOR') || (p === 'PAINT_PROTECTOR' && s === 'POST_SCORER')) {
-    return 'Âncora Dominante de Garrafão';
+  if ((p === 'PAINT_PROTECTOR' && s === 'POST_SCORER') || (p === 'POST_SCORER' && s === 'PAINT_PROTECTOR')) {
+    return '🧱🥋 Pivô Dominador Clássico';
   }
-  if ((p === 'STRETCH_BIG' && s === 'PAINT_PROTECTOR') || (p === 'PAINT_PROTECTOR' && s === 'STRETCH_BIG')) {
-    return 'Pivô Protetor Espaçador';
+  if ((p === 'PAINT_PROTECTOR' && s === 'STRETCH_BIG') || (p === 'STRETCH_BIG' && s === 'PAINT_PROTECTOR')) {
+    return '🧱🏹 Pivô Protetor Espaçador';
   }
   if ((p === 'POINT_FORWARD' && s === 'TWO_WAY_SPECIALIST') || (p === 'TWO_WAY_SPECIALIST' && s === 'POINT_FORWARD')) {
-    return 'Ala Facilitador Two-Way';
+    return '👑⚔️ Ala Facilitador Two-Way';
   }
 
-  return `${ARCHETYPES[primary].name} / ${ARCHETYPES[secondary].name}`;
+  return `${ARCHETYPES[primary].emoji} ${ARCHETYPES[primary].name} / ${ARCHETYPES[secondary].name}`;
 }
 
 /**
@@ -222,7 +255,7 @@ export function combineArchetypes(
     defensiveRebound: 68,
   };
 
-  // Ajustes por posição
+  // Ajustes biomecânicos por posição
   if (position === 'PG' || position === 'SG') {
     initialAttrs.speed += 4;
     initialAttrs.ballControl += 4;
