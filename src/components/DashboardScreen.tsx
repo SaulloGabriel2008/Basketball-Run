@@ -13,9 +13,12 @@ import {
   ArrowUpRight, 
   ArrowDownRight,
   Newspaper,
-  CheckCircle,
   GraduationCap,
-  Award
+  Award,
+  Wallet,
+  ShoppingBag,
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 
 export const DashboardScreen: React.FC = () => {
@@ -24,6 +27,12 @@ export const DashboardScreen: React.FC = () => {
     simulateNextGame, 
     simulateBatchGames, 
     simulateFullSeason, 
+    advanceToNextNbaSeason,
+    openSeasonEndModal,
+    setScreen,
+    nbaStandings,
+    ncaaStandings,
+    gleagueStandings,
     isSimulating, 
     simProgress, 
     newsFeed,
@@ -50,6 +59,9 @@ export const DashboardScreen: React.FC = () => {
 
   const seasonMaxGames = isCollege ? 32 : isGLeague ? 50 : 82;
   const isSeasonOver = s.gamesPlayed >= seasonMaxGames;
+
+  const myTeamStanding = (isCollege ? ncaaStandings : isGLeague ? gleagueStandings : nbaStandings)
+    .find(team => team.teamId === player.currentTeamId);
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -91,13 +103,26 @@ export const DashboardScreen: React.FC = () => {
             </div>
 
             <div className="mb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xl" title={player.country?.name || 'Internacional'}>
+                  {player.country?.flag || '🌐'}
+                </span>
+                <span className="text-xs font-mono font-semibold text-[#8a96a8]">
+                  {player.country?.name || 'Internacional'}
+                </span>
+              </div>
               <h1 className="text-2xl font-condensed font-black uppercase text-white tracking-wide">
                 {player.fullName}
               </h1>
-              <div className="text-xs font-mono text-[#8a96a8] flex items-center gap-2 mt-0.5">
+              <div className="text-xs font-mono text-[#8a96a8] flex flex-wrap items-center gap-1.5 mt-1">
                 <span className="text-white font-bold">{player.position}</span>
                 <span>•</span>
-                <span>{player.archetype.replace('_', ' ')}</span>
+                <span className="text-team-primary font-semibold">
+                  {player.primaryArchetype?.replace(/_/g, ' ') || player.archetype} 
+                  {player.secondaryArchetype && player.secondaryArchetype !== player.primaryArchetype && (
+                    <span className="text-amber-400"> / {player.secondaryArchetype.replace(/_/g, ' ')}</span>
+                  )}
+                </span>
                 <span>•</span>
                 <span>{Math.floor(player.heightInches / 12)}'{player.heightInches % 12}"</span>
                 <span>•</span>
@@ -108,11 +133,25 @@ export const DashboardScreen: React.FC = () => {
               </div>
             </div>
 
-            {/* Informações Contratuais */}
-            <div className="bg-[#0a0c0f] border border-[#2b3345] rounded-lg p-3 space-y-2 mb-4 text-xs font-mono">
-              <div className="flex justify-between">
+            {/* Saldo Bancário e Informações Contratuais */}
+            <div className="bg-[#0a0c0f] border border-[#2b3345] rounded-lg p-3 space-y-2.5 mb-4 text-xs font-mono">
+              <div className="flex justify-between items-center pb-2 border-b border-[#1c222e]">
+                <span className="text-[#8a96a8] flex items-center gap-1.5">
+                  <Wallet className="w-3.5 h-3.5 text-emerald-400" /> Saldo Bancário:
+                </span>
+                <span className="text-emerald-400 font-black text-sm">{formatCurrency(player.bankBalance || 0)}</span>
+              </div>
+              
+              <button
+                onClick={() => setScreen('CAREER_SHOP')}
+                className="w-full py-1.5 px-3 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/50 text-[11px] font-condensed font-bold uppercase tracking-wider text-emerald-300 rounded transition-all flex items-center justify-center gap-2"
+              >
+                <ShoppingBag className="w-3.5 h-3.5" /> Acessar Loja de Carreira & Investimentos
+              </button>
+
+              <div className="flex justify-between pt-1">
                 <span className="text-[#8a96a8]">Tipo de Contrato:</span>
-                <span className="text-white font-bold">{player.contract.type.replace('_', ' ')}</span>
+                <span className="text-white font-bold">{player.contract.type.replace(/_/g, ' ')}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#8a96a8]">Salário Anual:</span>
@@ -130,15 +169,18 @@ export const DashboardScreen: React.FC = () => {
               )}
             </div>
 
-            {/* Barras de Estado: Moral, Química, Energia */}
+            {/* Barras de Estado: Moral, Química, Energia (com destaque em vermelho para status negativo) */}
             <div className="space-y-2.5">
               <div>
                 <div className="flex justify-between text-[11px] font-mono mb-1">
-                  <span className="text-[#8a96a8] flex items-center gap-1"><Heart className="w-3 h-3 text-rose-500" /> Moral do Atleta</span>
-                  <span className="text-white font-bold">{player.moral}%</span>
+                  <span className={`flex items-center gap-1 ${player.moral < 50 ? 'text-red-400 font-bold' : 'text-[#8a96a8]'}`}>
+                    <Heart className={`w-3 h-3 ${player.moral < 50 ? 'text-red-500' : 'text-rose-500'}`} /> 
+                    Moral do Atleta {player.moral < 50 && '(Em Baixa)'}
+                  </span>
+                  <span className={`font-bold ${player.moral < 50 ? 'text-red-400' : 'text-white'}`}>{player.moral}%</span>
                 </div>
                 <div className="w-full bg-[#0a0c0f] h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-rose-500 h-full" style={{ width: `${player.moral}%` }} />
+                  <div className={`h-full ${player.moral < 50 ? 'bg-red-500' : 'bg-rose-500'}`} style={{ width: `${player.moral}%` }} />
                 </div>
               </div>
 
@@ -154,13 +196,23 @@ export const DashboardScreen: React.FC = () => {
 
               <div>
                 <div className="flex justify-between text-[11px] font-mono mb-1">
-                  <span className="text-[#8a96a8] flex items-center gap-1"><BatteryMedium className="w-3 h-3 text-emerald-400" /> Energia & Físico</span>
-                  <span className="text-white font-bold">{player.energy}%</span>
+                  <span className={`flex items-center gap-1 ${player.energy < 50 ? 'text-red-400 font-bold' : 'text-[#8a96a8]'}`}>
+                    <BatteryMedium className={`w-3 h-3 ${player.energy < 50 ? 'text-red-500' : 'text-emerald-400'}`} /> 
+                    Energia & Físico {player.energy < 50 && '(Cansaço)'}
+                  </span>
+                  <span className={`font-bold ${player.energy < 50 ? 'text-red-400' : 'text-white'}`}>{player.energy}%</span>
                 </div>
                 <div className="w-full bg-[#0a0c0f] h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-emerald-500 h-full" style={{ width: `${player.energy}%` }} />
+                  <div className={`h-full ${player.energy < 50 ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${player.energy}%` }} />
                 </div>
               </div>
+
+              {player.energy < 40 && (
+                <div className="flex items-center gap-2 p-2 rounded bg-red-950/40 border border-red-850 text-red-300 text-[11px] font-mono">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                  <span>Atenção: Fadiga elevada aumenta risco de lesão!</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -201,51 +253,65 @@ export const DashboardScreen: React.FC = () => {
 
         {/* Painel Central e Direito: Controles de Simulação & Estatísticas */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Barra de Simulação Rápida */}
+          {/* Barra de Simulação Rápida (Foco Arcade de Temporada por Temporada) */}
           <div className="bg-[#13171f] border border-[#2b3345] rounded-xl p-5 shadow-xl">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-4">
               <div>
                 <h2 className="text-xl font-condensed font-black uppercase text-white tracking-wide flex items-center gap-2">
                   <Play className="w-5 h-5 text-team-primary" />
-                  Operações da Temporada ({s.seasonYear})
+                  Temporada ({s.seasonYear}) · {currentTeam?.name}
                 </h2>
-                <span className="text-xs font-mono text-[#8a96a8]">
-                  Progresso: {s.gamesPlayed} de {seasonMaxGames} partidas disputadas ({Math.round((s.gamesPlayed / seasonMaxGames) * 100)}%)
-                </span>
+                <div className="flex flex-wrap items-center gap-2 mt-1 text-xs font-mono text-[#8a96a8]">
+                  <span>Progresso: {s.gamesPlayed} de {seasonMaxGames} jogos</span>
+                  <span>•</span>
+                  {myTeamStanding && (
+                    <span className="flex items-center gap-1.5">
+                      Campanha: 
+                      <span className="text-emerald-400 font-bold">{myTeamStanding.wins}V</span>
+                      <span>-</span>
+                      <span className="text-red-400 font-bold bg-red-950/60 px-1.5 py-0.5 rounded border border-red-900/60">
+                        {myTeamStanding.losses}D
+                      </span>
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Botões de Ação de Simulação */}
               {!isSeasonOver ? (
-                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+                  {/* Botão Primário Arcade: Temporada Completa */}
                   <button
-                    onClick={() => simulateNextGame()}
+                    onClick={() => simulateFullSeason()}
                     disabled={isSimulating}
-                    className="flex-1 md:flex-none px-4 py-2.5 bg-team-primary hover:opacity-90 disabled:opacity-50 text-team-contrast text-xs font-condensed font-bold uppercase tracking-wider rounded-lg shadow-team-glow transition-all flex items-center justify-center gap-2"
+                    className="flex-1 md:flex-none px-5 py-2.5 bg-team-primary hover:opacity-95 disabled:opacity-50 text-team-contrast text-xs font-condensed font-black uppercase tracking-wider rounded-lg shadow-team-glow transition-all flex items-center justify-center gap-2 border border-white/20"
                   >
-                    <Play className="w-4 h-4 fill-current" />
-                    Próxima Partida
+                    <FastForward className="w-4 h-4 fill-current" />
+                    Simular Temporada Completa ({seasonMaxGames - s.gamesPlayed} Jogos)
                   </button>
 
                   <button
                     onClick={() => simulateBatchGames(10)}
                     disabled={isSimulating}
-                    className="flex-1 md:flex-none px-4 py-2.5 bg-[#1c222e] hover:bg-[#2b3345] disabled:opacity-50 text-white text-xs font-condensed font-bold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center justify-center gap-2"
+                    className="px-3.5 py-2.5 bg-[#1c222e] hover:bg-[#2b3345] disabled:opacity-50 text-white text-xs font-condensed font-bold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center justify-center gap-1.5"
+                    title="Avançar 10 partidas consecutivas"
                   >
-                    <FastForward className="w-4 h-4" />
-                    Simular Mês (10 J)
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    +10 Jogos
                   </button>
 
                   <button
-                    onClick={() => simulateFullSeason()}
+                    onClick={() => simulateNextGame()}
                     disabled={isSimulating}
-                    className="flex-1 md:flex-none px-4 py-2.5 bg-[#1c222e] hover:bg-[#2b3345] disabled:opacity-50 text-amber-400 text-xs font-condensed font-bold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center justify-center gap-2"
+                    className="px-3 py-2.5 bg-[#1c222e] hover:bg-[#2b3345] disabled:opacity-50 text-[#8a96a8] hover:text-white text-xs font-condensed font-semibold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center justify-center gap-1"
+                    title="Simular partida por partida"
                   >
-                    <CalendarDays className="w-4 h-4" />
-                    Temporada Completa
+                    <Play className="w-3.5 h-3.5" />
+                    1 Jogo
                   </button>
                 </div>
               ) : (
-                /* Temporada Concluída: Decisões de Intertemporada */
+                /* Temporada Concluída: Decisões e Botão Chamativo de Avanço */
                 <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                   {isCollege ? (
                     <>
@@ -263,47 +329,75 @@ export const DashboardScreen: React.FC = () => {
                         <GraduationCap className="w-4 h-4" />
                         Ficar +1 Ano na NCAA
                       </button>
+                      <button
+                        onClick={openSeasonEndModal}
+                        className="px-3 py-2.5 bg-[#1c222e] hover:bg-[#2b3345] text-amber-400 text-xs font-condensed font-bold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center gap-1.5"
+                      >
+                        Ver Resumo
+                      </button>
                     </>
                   ) : (
-                    <div className="text-xs font-mono text-emerald-400 flex items-center gap-2 font-bold">
-                      <CheckCircle className="w-4 h-4" />
-                      Temporada regular finalizada com {s.gamesPlayed} partidas!
-                    </div>
+                    <>
+                      <button
+                        onClick={advanceToNextNbaSeason}
+                        className="px-6 py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black text-xs font-condensed uppercase tracking-wider rounded-lg shadow-lg shadow-amber-500/25 transition-all flex items-center justify-center gap-2 hover:scale-[1.02]"
+                      >
+                        <ArrowRight className="w-4 h-4 stroke-[3]" />
+                        Avançar para a Próxima Temporada ({s.seasonYear + 1})
+                      </button>
+                      <button
+                        onClick={openSeasonEndModal}
+                        className="px-4 py-3 bg-[#1c222e] hover:bg-[#2b3345] text-white text-xs font-condensed font-bold uppercase tracking-wider rounded-lg border border-[#2b3345] transition-all flex items-center gap-2"
+                      >
+                        📊 Resumo da Temporada & Finanças
+                      </button>
+                    </>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Painel de Estatísticas da Temporada do Atleta */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2.5 pt-2 border-t border-[#2b3345]">
-              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2.5 rounded-lg text-center">
+            {/* Painel de Estatísticas da Temporada do Atleta (com destaques em vermelho para dados negativos) */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2 pt-2 border-t border-[#2b3345]">
+              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2 rounded-lg text-center">
                 <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">Pontos (PPG)</div>
-                <div className="text-xl font-mono font-black text-white">{s.pointsPerGame}</div>
+                <div className="text-lg font-mono font-black text-white">{s.pointsPerGame}</div>
               </div>
 
-              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2.5 rounded-lg text-center">
+              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2 rounded-lg text-center">
                 <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">Rebotes (RPG)</div>
-                <div className="text-xl font-mono font-black text-white">{s.reboundsPerGame}</div>
+                <div className="text-lg font-mono font-black text-white">{s.reboundsPerGame}</div>
               </div>
 
-              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2.5 rounded-lg text-center">
+              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2 rounded-lg text-center">
                 <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">Assistências (APG)</div>
-                <div className="text-xl font-mono font-black text-white">{s.assistsPerGame}</div>
+                <div className="text-lg font-mono font-black text-white">{s.assistsPerGame}</div>
               </div>
 
-              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2.5 rounded-lg text-center">
+              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2 rounded-lg text-center">
                 <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">Roubos / Tocos</div>
-                <div className="text-sm font-mono font-bold text-white mt-1">{s.stealsPerGame} / {s.blocksPerGame}</div>
+                <div className="text-xs font-mono font-bold text-white mt-1">{s.stealsPerGame} / {s.blocksPerGame}</div>
               </div>
 
-              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2.5 rounded-lg text-center">
-                <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">Eficiência (FG / 3P)</div>
-                <div className="text-sm font-mono font-bold text-white mt-1">{s.fgPct}% / {s.fg3Pct}%</div>
+              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2 rounded-lg text-center">
+                <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">Eficiência (FG/3P)</div>
+                <div className="text-xs font-mono font-bold text-white mt-1">{s.fgPct}% / {s.fg3Pct}%</div>
               </div>
 
-              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2.5 rounded-lg text-center">
-                <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">True Shooting (TS%)</div>
-                <div className="text-xl font-mono font-black text-amber-400">{s.tsPct}%</div>
+              <div className="bg-[#0a0c0f] border border-[#2b3345] p-2 rounded-lg text-center">
+                <div className="text-[10px] font-condensed uppercase tracking-wider text-[#8a96a8]">True Shooting</div>
+                <div className="text-lg font-mono font-black text-amber-400">{s.tsPct}%</div>
+              </div>
+
+              {/* Destaques Negativos Obrigatórios em Vermelho: Turnovers e Faltas */}
+              <div className="bg-red-950/20 border border-red-900/40 p-2 rounded-lg text-center">
+                <div className="text-[10px] font-condensed uppercase tracking-wider text-red-400 font-bold">Turnovers (TOV)</div>
+                <div className="text-lg font-mono font-black text-red-400">{s.turnoversPerGame}</div>
+              </div>
+
+              <div className="bg-red-950/20 border border-red-900/40 p-2 rounded-lg text-center">
+                <div className="text-[10px] font-condensed uppercase tracking-wider text-red-400 font-bold">Faltas (PF)</div>
+                <div className="text-lg font-mono font-black text-red-400">{s.foulsPerGame}</div>
               </div>
             </div>
 
@@ -341,24 +435,33 @@ export const DashboardScreen: React.FC = () => {
                   Nenhuma notícia recente. Simule uma partida para gerar eventos!
                 </div>
               ) : (
-                newsFeed.map(news => (
-                  <div 
-                    key={news.id} 
-                    className="p-3 bg-[#0a0c0f] border border-[#2b3345] rounded-lg hover:border-team-primary/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <span className="font-condensed font-bold text-sm text-white">
-                        {news.headline}
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#1c222e] text-[#8a96a8]">
-                        {news.date}
-                      </span>
+                newsFeed.map(news => {
+                  const isNegative = /derrota|perdeu|lesão|lesao|crise|queda|caiu|tropeço|afastado|fratura|entorse/i.test(
+                    `${news.headline} ${news.content}`
+                  );
+                  return (
+                    <div 
+                      key={news.id} 
+                      className={`p-3 rounded-lg border transition-colors ${
+                        isNegative 
+                          ? 'bg-red-950/20 border-red-900/50 hover:border-red-700/60' 
+                          : 'bg-[#0a0c0f] border-[#2b3345] hover:border-team-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className={`font-condensed font-bold text-sm ${isNegative ? 'text-red-300' : 'text-white'}`}>
+                          {isNegative && '⚠️ '}{news.headline}
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#1c222e] text-[#8a96a8]">
+                          {news.date}
+                        </span>
+                      </div>
+                      <p className={`text-xs leading-relaxed ${isNegative ? 'text-red-300/80' : 'text-[#8a96a8]'}`}>
+                        {news.content}
+                      </p>
                     </div>
-                    <p className="text-xs text-[#8a96a8] leading-relaxed">
-                      {news.content}
-                    </p>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>

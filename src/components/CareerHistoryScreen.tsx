@@ -173,6 +173,8 @@ export const CareerHistoryScreen: React.FC = () => {
                     <th className="text-right py-2 px-2">FG%</th>
                     <th className="text-right py-2 px-2">3P%</th>
                     <th className="text-right py-2 px-2">FT%</th>
+                    <th className="text-right py-2 px-2 text-red-400 font-bold">TOV</th>
+                    <th className="text-right py-2 px-2 text-red-400 font-bold">PF</th>
                   </>
                 )}
 
@@ -187,6 +189,8 @@ export const CareerHistoryScreen: React.FC = () => {
                     <th className="text-right py-2 px-2">AST</th>
                     <th className="text-right py-2 px-2">STL</th>
                     <th className="text-right py-2 px-2">BLK</th>
+                    <th className="text-right py-2 px-2 text-red-400 font-bold">TOV</th>
+                    <th className="text-right py-2 px-2 text-red-400 font-bold">PF</th>
                   </>
                 )}
 
@@ -238,6 +242,8 @@ export const CareerHistoryScreen: React.FC = () => {
                         <td className="text-right py-2.5 px-2">{season.fgPct}%</td>
                         <td className="text-right py-2.5 px-2">{season.fg3Pct}%</td>
                         <td className="text-right py-2.5 px-2">{season.ftPct}%</td>
+                        <td className="text-right py-2.5 px-2 text-red-400 font-bold">{season.turnoversPerGame}</td>
+                        <td className="text-right py-2.5 px-2 text-red-400 font-bold">{season.foulsPerGame}</td>
                       </>
                     )}
 
@@ -252,6 +258,8 @@ export const CareerHistoryScreen: React.FC = () => {
                         <td className="text-right py-2.5 px-2">{season.totalAst}</td>
                         <td className="text-right py-2.5 px-2">{season.totalStl}</td>
                         <td className="text-right py-2.5 px-2">{season.totalBlk}</td>
+                        <td className="text-right py-2.5 px-2 text-red-400 font-bold">{season.totalTov}</td>
+                        <td className="text-right py-2.5 px-2 text-red-400 font-bold">{season.totalPf}</td>
                       </>
                     )}
 

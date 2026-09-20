@@ -183,7 +183,7 @@ const StandingsTable: React.FC<StandingsTableProps> = ({ title, teams, userTeamI
                   <span className="font-bold">{team.name}</span>
                 </td>
                 <td className="text-right py-2 px-2 text-emerald-400 font-bold">{simulatedWins}</td>
-                <td className="text-right py-2 px-2 text-rose-400 font-bold">{simulatedLosses}</td>
+                <td className="text-right py-2 px-2 text-red-400 font-bold">{simulatedLosses}</td>
                 <td className="text-right py-2 px-2 font-bold text-white">{pct}</td>
                 <td className="text-right py-2 px-2 text-[#8a96a8]">{team.division || team.conference}</td>
                 <td className="text-right py-2 px-2 text-amber-400 font-bold">{team.prestige}</td>

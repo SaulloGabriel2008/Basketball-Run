@@ -29,11 +29,18 @@ export const BoxScoreScreen: React.FC = () => {
   const awayStats = box.playerStats.filter(p => p.teamId === box.awayTeamId);
 
   const userGame = box.userPlayerGame;
+  const userTeamId = userGame?.teamId || player?.currentTeamId;
+  const isUserHome = box.homeTeamId === userTeamId;
+  const isUserAway = box.awayTeamId === userTeamId;
+  const userTeamScore = isUserHome ? box.homeScore : isUserAway ? box.awayScore : null;
+  const oppScore = isUserHome ? box.awayScore : isUserAway ? box.homeScore : null;
+  const isLoss = userTeamScore !== null && oppScore !== null && userTeamScore < oppScore;
+  const isWin = userTeamScore !== null && oppScore !== null && userTeamScore > oppScore;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
       {/* Placar Principal e Parciais por Quarto */}
-      <div className="bg-[#13171f] border border-[#2b3345] rounded-xl p-6 shadow-2xl">
+      <div className={`bg-[#13171f] rounded-xl p-6 shadow-2xl border ${isLoss ? 'border-red-900/50' : 'border-[#2b3345]'}`}>
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Away Team */}
           <div className="flex items-center gap-4 flex-1 justify-end">
@@ -44,21 +51,31 @@ export const BoxScoreScreen: React.FC = () => {
               </h2>
             </div>
             {awayTeam && <TeamLogo team={awayTeam} size="lg" />}
-            <span className="text-4xl md:text-5xl font-mono font-black text-white ml-2">
+            <span className={`text-4xl md:text-5xl font-mono font-black ml-2 ${isUserAway && isLoss ? 'text-red-400' : 'text-white'}`}>
               {box.awayScore}
             </span>
           </div>
 
-          <div className="text-center px-4 shrink-0">
-            <span className="text-xs font-mono uppercase tracking-widest text-amber-400 bg-[#1c222e] px-3 py-1 rounded-full border border-[#2b3345]">
-              Final
-            </span>
+          <div className="text-center px-4 shrink-0 space-y-1">
+            {isLoss ? (
+              <span className="inline-block text-xs font-mono uppercase tracking-widest text-red-400 bg-red-950/80 px-3 py-1 rounded-full border border-red-800 font-bold">
+                Derrota
+              </span>
+            ) : isWin ? (
+              <span className="inline-block text-xs font-mono uppercase tracking-widest text-emerald-400 bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-800 font-bold">
+                Vitória
+              </span>
+            ) : (
+              <span className="inline-block text-xs font-mono uppercase tracking-widest text-amber-400 bg-[#1c222e] px-3 py-1 rounded-full border border-[#2b3345]">
+                Final
+              </span>
+            )}
             <div className="text-[11px] font-mono text-[#8a96a8] mt-1">{box.date}</div>
           </div>
 
           {/* Home Team */}
           <div className="flex items-center gap-4 flex-1 justify-start">
-            <span className="text-4xl md:text-5xl font-mono font-black text-white mr-2">
+            <span className={`text-4xl md:text-5xl font-mono font-black mr-2 ${isUserHome && isLoss ? 'text-red-400' : 'text-white'}`}>
               {box.homeScore}
             </span>
             {homeTeam && <TeamLogo team={homeTeam} size="lg" />}
@@ -124,8 +141,8 @@ export const BoxScoreScreen: React.FC = () => {
               </span>
             </div>
             <div className="text-xs font-mono text-[#8a96a8]">
-              Índice Mais/Menos: <span className={`font-bold ${userGame.plusMinus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {userGame.plusMinus >= 0 ? `+${userGame.plusMinus}` : userGame.plusMinus}
+              Índice Mais/Menos: <span className={`font-bold ${userGame.plusMinus > 0 ? 'text-emerald-400' : userGame.plusMinus < 0 ? 'text-red-400' : 'text-white'}`}>
+                {userGame.plusMinus > 0 ? `+${userGame.plusMinus}` : userGame.plusMinus}
               </span>
             </div>
           </div>
@@ -163,9 +180,9 @@ export const BoxScoreScreen: React.FC = () => {
               <div className="text-[10px] text-[#8a96a8]">STL/BLK</div>
               <div className="text-xs font-bold text-white mt-1">{userGame.stl}/{userGame.blk}</div>
             </div>
-            <div className="bg-[#0a0c0f] p-2 rounded border border-[#2b3345]">
-              <div className="text-[10px] text-[#8a96a8]">TOV/PF</div>
-              <div className="text-xs font-bold text-rose-400 mt-1">{userGame.tov}/{userGame.pf}</div>
+            <div className="bg-red-950/20 p-2 rounded border border-red-900/40">
+              <div className="text-[10px] text-red-400 font-bold">TOV / PF</div>
+              <div className="text-xs font-bold text-red-400 mt-1">{userGame.tov} / {userGame.pf}</div>
             </div>
           </div>
         </div>
@@ -206,7 +223,7 @@ const TeamBoxScoreTable: React.FC<TeamBoxScoreTableProps> = ({ teamName, stats, 
             <th className="text-right py-2 px-2">AST</th>
             <th className="text-right py-2 px-2">STL</th>
             <th className="text-right py-2 px-2">BLK</th>
-            <th className="text-right py-2 px-2">TOV</th>
+            <th className="text-right py-2 px-2 text-red-400">TOV</th>
             <th className="text-right py-2 px-2">PF</th>
             <th className="text-right py-2 px-2">+/-</th>
           </tr>
@@ -234,9 +251,9 @@ const TeamBoxScoreTable: React.FC<TeamBoxScoreTableProps> = ({ teamName, stats, 
                 <td className="text-right py-2 px-2">{row.ast}</td>
                 <td className="text-right py-2 px-2">{row.stl}</td>
                 <td className="text-right py-2 px-2">{row.blk}</td>
-                <td className="text-right py-2 px-2 text-rose-400">{row.tov}</td>
-                <td className="text-right py-2 px-2 text-[#8a96a8]">{row.pf}</td>
-                <td className={`text-right py-2 px-2 font-bold ${row.plusMinus >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <td className="text-right py-2 px-2 text-red-400 font-bold">{row.tov}</td>
+                <td className={`text-right py-2 px-2 ${row.pf >= 4 ? 'text-red-400 font-bold' : 'text-[#8a96a8]'}`}>{row.pf}</td>
+                <td className={`text-right py-2 px-2 font-bold ${row.plusMinus > 0 ? 'text-emerald-400' : row.plusMinus < 0 ? 'text-red-400' : 'text-[#8a96a8]'}`}>
                   {row.plusMinus > 0 ? `+${row.plusMinus}` : row.plusMinus}
                 </td>
               </tr>

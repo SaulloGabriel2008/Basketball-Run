@@ -10,7 +10,9 @@ import {
   Save, 
   Download, 
   Upload, 
-  RotateCcw
+  RotateCcw,
+  ShoppingBag,
+  Wallet
 } from 'lucide-react';
 
 export const HeaderNav: React.FC = () => {
@@ -29,6 +31,10 @@ export const HeaderNav: React.FC = () => {
   if (!player) return null;
 
   const currentTeam = getTeamById(player.currentTeamId);
+
+  const formatMoney = (val: number) => {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+  };
 
   const handleSave = async () => {
     await saveToIndexedDb();
@@ -73,6 +79,7 @@ export const HeaderNav: React.FC = () => {
     { screen: 'BOX_SCORE', label: 'Último Jogo', icon: <Calendar className="w-4 h-4" /> },
     { screen: 'CAREER_HISTORY', label: 'Arquivo & Troféus', icon: <Trophy className="w-4 h-4" /> },
     { screen: 'LEAGUE_STANDINGS', label: 'Central da Liga', icon: <BarChart3 className="w-4 h-4" /> },
+    { screen: 'CAREER_SHOP', label: 'Loja & Finanças', icon: <ShoppingBag className="w-4 h-4 text-emerald-400" /> },
   ];
 
   return (
@@ -86,6 +93,7 @@ export const HeaderNav: React.FC = () => {
             )}
             <div>
               <div className="flex items-center gap-2">
+                <span className="text-base" title={player.country?.name}>{player.country?.flag}</span>
                 <span className="font-condensed font-black tracking-wider text-lg uppercase text-white">
                   {player.fullName}
                 </span>
@@ -103,6 +111,12 @@ export const HeaderNav: React.FC = () => {
                 <span>{player.age} anos</span>
               </div>
             </div>
+          </div>
+
+          {/* Saldo da Carteira (Mobile/Desktop) */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-[#13171f] border border-emerald-500/40 rounded-lg text-xs font-mono font-black text-emerald-400">
+            <Wallet className="w-3.5 h-3.5" />
+            <span>{formatMoney(player.bankBalance || 0)}</span>
           </div>
 
           {/* Botões mobile de save */}

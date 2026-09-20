@@ -9,9 +9,11 @@ import {
   Archetype, 
   Position, 
   PlayerAttributes,
-  TeamEntity 
+  TeamEntity,
+  CountryInfo
 } from '../types';
 import { NBA_TEAMS, NCAA_TEAMS, G_LEAGUE_TEAMS, getTeamById, getGLeagueAffiliate, getParentNbaTeam } from '../data/teamsRepository';
+import { CAREER_SHOP_ITEMS } from '../data/careerShop';
 import { simulateMatch } from '../engine/simulationCore';
 import { calculateOverall, evolveAttributes } from '../engine/biologicalAging';
 import { createRookieScaleContract, createTwoWayContract } from '../engine/contracts';
@@ -28,6 +30,7 @@ export type ScreenType =
   | 'BOX_SCORE' 
   | 'CAREER_HISTORY' 
   | 'LEAGUE_STANDINGS' 
+  | 'CAREER_SHOP'
   | 'DRAFT_CEREMONY' 
   | 'RETIREMENT';
 
@@ -40,6 +43,7 @@ interface GameState {
   activeEvent: CareerEvent | null;
   isSimulating: boolean;
   simProgress: { completed: number; total: number } | null;
+  isSeasonEndModalOpen: boolean;
   nbaStandings: StandingsEntry[];
   ncaaStandings: StandingsEntry[];
   gleagueStandings: StandingsEntry[];
@@ -48,11 +52,17 @@ interface GameState {
 
   // Ações
   setScreen: (screen: ScreenType) => void;
+  openSeasonEndModal: () => void;
+  closeSeasonEndModal: () => void;
+  advanceToNextNbaSeason: () => void;
+  buyShopItem: (itemId: string) => void;
   createNewPlayer: (data: {
     firstName: string;
     lastName: string;
+    country: CountryInfo;
     position: Position;
-    archetype: Archetype;
+    primaryArchetype: Archetype;
+    secondaryArchetype: Archetype;
     heightInches: number;
     weightLbs: number;
     wingspanInches: number;
@@ -102,6 +112,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   activeEvent: null,
   isSimulating: false,
   simProgress: null,
+  isSeasonEndModalOpen: false,
   nbaStandings: createInitialStandings('NBA'),
   ncaaStandings: createInitialStandings('NCAA'),
   gleagueStandings: createInitialStandings('G_LEAGUE'),
@@ -109,6 +120,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   draftLotteryResults: null,
 
   setScreen: (screen) => set({ currentScreen: screen }),
+  openSeasonEndModal: () => set({ isSeasonEndModalOpen: true }),
+  closeSeasonEndModal: () => set({ isSeasonEndModalOpen: false }),
 
   createNewPlayer: (data) => {
     const ovr = calculateOverall(data.initialAttributes, data.position);
@@ -119,13 +132,16 @@ export const useGameStore = create<GameState>((set, get) => ({
       firstName: data.firstName,
       lastName: data.lastName,
       fullName: `${data.firstName} ${data.lastName}`,
+      country: data.country,
       age: 18,
       birthYear: new Date().getFullYear() - 18,
       heightInches: data.heightInches,
       weightLbs: data.weightLbs,
       wingspanInches: data.wingspanInches,
       position: data.position,
-      archetype: data.archetype,
+      archetype: data.primaryArchetype,
+      primaryArchetype: data.primaryArchetype,
+      secondaryArchetype: data.secondaryArchetype,
       attributes: data.initialAttributes,
       potential: Math.min(99, ovr + 14),
       workEthic: 3.5,
@@ -135,6 +151,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       energy: 100,
       injuryRisk: 5,
       isInjured: false,
+      bankBalance: 0,
+      purchasedItemIds: [],
       currentLeague: 'NCAA',
       currentTeamId: data.collegeTeamId,
       collegeTeamId: data.collegeTeamId,
@@ -379,6 +397,27 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
     set({ isSimulating: false, simProgress: null });
+
+    // Verifica se a temporada atingiu o limite de jogos
+    const currentP = get().player;
+    if (currentP) {
+      const maxG = currentP.currentLeague === 'NCAA' ? 32 : currentP.currentLeague === 'G_LEAGUE' ? 50 : 82;
+      if (currentP.seasonStats.gamesPlayed >= maxG) {
+        // Deposita salário e rendimentos passivos
+        const earnedSalary = currentP.contract.salaryPerYear || 0;
+        const passiveIncome = CAREER_SHOP_ITEMS
+          .filter(item => currentP.purchasedItemIds?.includes(item.id) && item.yearlyPassiveIncome)
+          .reduce((acc, cur) => acc + (cur.yearlyPassiveIncome || 0), 0);
+
+        const updated: PlayerEntity = JSON.parse(JSON.stringify(currentP));
+        updated.bankBalance = (updated.bankBalance || 0) + earnedSalary + passiveIncome;
+
+        set({
+          player: updated,
+          isSeasonEndModalOpen: true,
+        });
+      }
+    }
   },
 
   simulateFullSeason: async () => {
@@ -436,6 +475,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       draftProjectedPick: draftStock.projectedPick,
       draftLotteryResults: lottery,
       currentScreen: 'DRAFT_CEREMONY',
+      isSeasonEndModalOpen: false,
     });
   },
 
@@ -482,7 +522,11 @@ export const useGameStore = create<GameState>((set, get) => ({
       per: 0,
     };
 
-    set({ player: updatedPlayer, currentScreen: 'DASHBOARD' });
+    set({ 
+      player: updatedPlayer, 
+      currentScreen: 'DASHBOARD',
+      isSeasonEndModalOpen: false 
+    });
   },
 
   completeDraftSelection: () => {
@@ -605,6 +649,129 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ player: updated });
   },
 
+  advanceToNextNbaSeason: () => {
+    const { player } = get();
+    if (!player) return;
+
+    const updatedPlayer: PlayerEntity = JSON.parse(JSON.stringify(player));
+    updatedPlayer.careerStats.push({ ...updatedPlayer.seasonStats });
+    updatedPlayer.age += 1;
+    updatedPlayer.attributes = evolveAttributes(
+      updatedPlayer.attributes,
+      updatedPlayer.age,
+      updatedPlayer.potential,
+      updatedPlayer.workEthic
+    );
+    updatedPlayer.overall = calculateOverall(updatedPlayer.attributes, updatedPlayer.position);
+
+    if (updatedPlayer.contract.yearsRemaining > 1) {
+      updatedPlayer.contract.yearsRemaining -= 1;
+    } else {
+      updatedPlayer.contract.yearsRemaining = 3;
+      updatedPlayer.contract.yearsTotal = 3;
+      updatedPlayer.contract.salaryPerYear = Math.round(updatedPlayer.contract.salaryPerYear * 1.15);
+    }
+
+    const nextYear = updatedPlayer.seasonStats.seasonYear + 1;
+    updatedPlayer.seasonStats = {
+      careerId: 1,
+      seasonYear: nextYear,
+      league: updatedPlayer.currentLeague,
+      teamId: updatedPlayer.currentTeamId,
+      gamesPlayed: 0,
+      gamesStarted: 0,
+      minutesPerGame: 0,
+      pointsPerGame: 0,
+      reboundsPerGame: 0,
+      assistsPerGame: 0,
+      stealsPerGame: 0,
+      blocksPerGame: 0,
+      turnoversPerGame: 0,
+      foulsPerGame: 0,
+      totalMinutes: 0,
+      totalPoints: 0,
+      totalFgm: 0,
+      totalFga: 0,
+      totalFg3m: 0,
+      totalFg3a: 0,
+      totalFtm: 0,
+      totalFta: 0,
+      totalOreb: 0,
+      totalDreb: 0,
+      totalReb: 0,
+      totalAst: 0,
+      totalStl: 0,
+      totalBlk: 0,
+      totalTov: 0,
+      totalPf: 0,
+      fgPct: 0,
+      fg3Pct: 0,
+      ftPct: 0,
+      tsPct: 0,
+      efgPct: 0,
+      usgPct: 0,
+      per: 0,
+      ows: 0,
+      dws: 0,
+      winShares: 0,
+      trophies: [],
+    };
+
+    const team = getTeamById(updatedPlayer.currentTeamId);
+    const startNews: NewsItem = {
+      id: `season-start-${Date.now()}`,
+      date: `Pré-Temporada ${nextYear}`,
+      headline: `Abertura Oficial da Temporada ${nextYear}!`,
+      content: `${updatedPlayer.fullName} inicia seu ${updatedPlayer.careerStats.length + 1}º ano profissional atuando pelo ${team?.name}. O elenco está pronto para a disputa!`,
+      category: 'GAME',
+      teamId: updatedPlayer.currentTeamId,
+    };
+
+    set(state => ({
+      player: updatedPlayer,
+      isSeasonEndModalOpen: false,
+      currentScreen: 'DASHBOARD',
+      newsFeed: [startNews, ...state.newsFeed],
+    }));
+  },
+
+  buyShopItem: (itemId: string) => {
+    const { player } = get();
+    if (!player) return;
+
+    const item = CAREER_SHOP_ITEMS.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (player.bankBalance < item.price) return;
+    if (player.purchasedItemIds?.includes(itemId)) return;
+
+    const updated: PlayerEntity = JSON.parse(JSON.stringify(player));
+    updated.bankBalance -= item.price;
+    updated.purchasedItemIds = [...(updated.purchasedItemIds || []), itemId];
+
+    if (item.attributeBonuses) {
+      for (const [attr, bonus] of Object.entries(item.attributeBonuses)) {
+        const key = attr as keyof PlayerAttributes;
+        if (typeof bonus === 'number') {
+          updated.attributes[key] = Math.min(99, updated.attributes[key] + bonus);
+        }
+      }
+      updated.overall = calculateOverall(updated.attributes, updated.position);
+    }
+
+    if (item.moralBonus) {
+      updated.moral = Math.min(100, updated.moral + item.moralBonus);
+    }
+    if (item.energyBonus) {
+      updated.energy = Math.min(100, updated.energy + item.energyBonus);
+    }
+    if (item.injuryRiskReduction) {
+      updated.injuryRisk = Math.max(1, updated.injuryRisk - item.injuryRiskReduction);
+    }
+
+    set({ player: updated });
+  },
+
   retireAndInduct: () => {
     const { player } = get();
     if (!player) return;
@@ -695,6 +862,7 @@ export const useGameStore = create<GameState>((set, get) => ({
  * Injeta dinamicamente as variáveis CSS da equipe atual no :root da página
  */
 export function applyDynamicTheme(team: TeamEntity) {
+  if (typeof document === 'undefined') return;
   const root = document.documentElement;
   root.style.setProperty('--team-primary', team.colors.primary);
   root.style.setProperty('--team-secondary', team.colors.secondary);

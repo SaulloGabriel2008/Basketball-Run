@@ -6,8 +6,10 @@ import { DashboardScreen } from './components/DashboardScreen';
 import { BoxScoreScreen } from './components/BoxScoreScreen';
 import { CareerHistoryScreen } from './components/CareerHistoryScreen';
 import { StandingsScreen } from './components/StandingsScreen';
+import { CareerShopScreen } from './components/CareerShopScreen';
 import { DraftCeremonyModal } from './components/DraftCeremonyModal';
 import { RetirementCeremonyModal } from './components/RetirementCeremonyModal';
+import { SeasonEndRecapModal } from './components/SeasonEndRecapModal';
 import { EventModal } from './components/EventModal';
 
 export const App: React.FC = () => {
@@ -50,6 +52,7 @@ export const App: React.FC = () => {
             {currentScreen === 'BOX_SCORE' && <BoxScoreScreen />}
             {currentScreen === 'CAREER_HISTORY' && <CareerHistoryScreen />}
             {currentScreen === 'LEAGUE_STANDINGS' && <StandingsScreen />}
+            {currentScreen === 'CAREER_SHOP' && <CareerShopScreen />}
           </>
         )}
       </main>
@@ -57,6 +60,7 @@ export const App: React.FC = () => {
       {/* Modais Globais de Ciclo de Vida */}
       {currentScreen === 'DRAFT_CEREMONY' && <DraftCeremonyModal />}
       {currentScreen === 'RETIREMENT' && <RetirementCeremonyModal />}
+      <SeasonEndRecapModal />
       <EventModal />
 
       {/* Rodapé Informativo */}

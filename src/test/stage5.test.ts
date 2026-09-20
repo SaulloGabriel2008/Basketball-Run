@@ -17,6 +17,11 @@ describe('ETAPA 5: Persistência, Integridade de Saves e Exportação', () => {
       wingspanInches: 82,
       position: 'SF',
       archetype: 'SLASHER',
+      primaryArchetype: 'SLASHER',
+      secondaryArchetype: 'PLAYMAKER',
+      country: { code: 'BRA', name: 'Brasil', flag: '🇧🇷' },
+      bankBalance: 7500000,
+      purchasedItemIds: [],
       attributes: {
         speed: 85,
         acceleration: 85,

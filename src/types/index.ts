@@ -2,12 +2,39 @@ export type LeagueId = 'NBA' | 'G_LEAGUE' | 'NCAA';
 
 export type Position = 'PG' | 'SG' | 'SF' | 'PF' | 'C';
 
+export interface CountryInfo {
+  code: string;
+  name: string;
+  flag: string;
+}
+
 export type Archetype = 
   | 'SHARPSHOOTER' 
   | 'LOCKDOWN_DEFENDER' 
   | 'PLAYMAKER' 
   | 'SLASHER' 
-  | 'POST_SCORER';
+  | 'POST_SCORER'
+  | 'PAINT_PROTECTOR'
+  | 'MID_RANGE_MAESTRO'
+  | 'STRETCH_BIG'
+  | 'POINT_FORWARD'
+  | 'TWO_WAY_SPECIALIST';
+
+export type ShopCategory = 'GEAR_TRAINING' | 'LIFESTYLE_LUXURY' | 'BUSINESS_INVESTMENT';
+
+export interface ShopItem {
+  id: string;
+  name: string;
+  description: string;
+  category: ShopCategory;
+  price: number;
+  iconName: string;
+  attributeBonuses?: Partial<PlayerAttributes>;
+  energyBonus?: number;
+  moralBonus?: number;
+  injuryRiskReduction?: number;
+  yearlyPassiveIncome?: number;
+}
 
 export interface PlayerAttributes {
   // Físicos
@@ -221,6 +248,7 @@ export interface PlayerEntity {
   firstName: string;
   lastName: string;
   fullName: string;
+  country: CountryInfo;
   age: number;
   birthYear: number;
   heightInches: number; // Para fórmula do HoF e simulação física
@@ -228,6 +256,8 @@ export interface PlayerEntity {
   wingspanInches: number;
   position: Position;
   archetype: Archetype;
+  primaryArchetype: Archetype;
+  secondaryArchetype: Archetype;
   attributes: PlayerAttributes;
   potential: number;     // 60-99
   workEthic: number;     // 1-5 (3.0 base)
@@ -237,6 +267,8 @@ export interface PlayerEntity {
   energy: number;        // 0-100
   injuryRisk: number;    // 0-100
   isInjured: boolean;
+  bankBalance: number;   // Saldo bancário em conta
+  purchasedItemIds: string[]; // Itens adquiridos na loja de luxo
   injuryDetails?: {
     type: string;
     gamesRemaining: number;
