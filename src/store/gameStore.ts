@@ -231,21 +231,44 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { player } = get();
     if (!player) return;
     const updated: PlayerEntity = JSON.parse(JSON.stringify(player));
+    const isTrade = Boolean(player.contract && player.contract.yearsRemaining > 0 && !offer.isExtension);
+
     updated.currentTeamId = offer.teamId;
-    updated.contract = {
-      type: 'STANDARD_NBA',
-      yearsTotal: offer.yearsTotal,
-      yearsRemaining: offer.yearsTotal,
-      salaryPerYear: offer.salaryPerYear,
-    };
+    if (isTrade && player.contract) {
+      // Mantém os anos restantes do contrato atual na troca
+      updated.contract = {
+        type: 'STANDARD_NBA',
+        yearsTotal: player.contract.yearsTotal,
+        yearsRemaining: player.contract.yearsRemaining,
+        salaryPerYear: offer.salaryPerYear || player.contract.salaryPerYear,
+      };
+    } else {
+      updated.contract = {
+        type: 'STANDARD_NBA',
+        yearsTotal: offer.yearsTotal,
+        yearsRemaining: offer.yearsTotal,
+        salaryPerYear: offer.salaryPerYear,
+      };
+    }
+
     const newTeam = getTeamById(offer.teamId);
     if (newTeam) applyDynamicTheme(newTeam);
 
+    const headline = isTrade
+      ? `BOMBA: ${updated.fullName} é negociado com o ${offer.teamName}!`
+      : offer.isExtension
+      ? `${updated.fullName} renova com o ${offer.teamName}!`
+      : `${updated.fullName} assina com o ${offer.teamName}!`;
+
+    const content = isTrade
+      ? `Após negociação direta, a franquia confirmou a aquisição de ${updated.fullName} para assumir o papel de ${offer.teamFit?.expectedRole.replace(/_/g, ' ') || offer.role}.`
+      : `Contrato de ${offer.yearsTotal} temporadas no valor de ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(offer.salaryPerYear)} por ano. O jogador assume o papel de ${offer.teamFit?.expectedRole.replace(/_/g, ' ') || offer.role}.`;
+
     const news: NewsItem = {
       id: `contract-news-${Date.now()}`,
-      date: `Intertemporada ${updated.seasonStats.seasonYear}`,
-      headline: `${updated.fullName} assina com o ${offer.teamName}!`,
-      content: `Contrato de ${offer.yearsTotal} temporadas no valor de ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(offer.salaryPerYear)} por ano. O jogador assume o papel de ${offer.role.replace(/_/g, ' ')}.`,
+      date: isTrade ? `Trade Deadline` : `Intertemporada ${updated.seasonStats.seasonYear}`,
+      headline,
+      content,
       category: 'TRANSACTION',
       teamId: offer.teamId,
     };
@@ -262,25 +285,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!player) return;
     const options = generateTradeOptions(player);
     if (options.length === 0) return;
-    const chosen = options[0];
-    const updated: PlayerEntity = JSON.parse(JSON.stringify(player));
-    updated.currentTeamId = chosen.teamId;
-    const newTeam = getTeamById(chosen.teamId);
-    if (newTeam) applyDynamicTheme(newTeam);
-
-    const news: NewsItem = {
-      id: `trade-news-${Date.now()}`,
-      date: `Trade Deadline`,
-      headline: `BOMBA: ${updated.fullName} é trocado para o ${chosen.teamName}!`,
-      content: `Após solicitação formal de troca, a diretoria fechou um acordo envolvendo escolhas futuras de draft e ativos jovens.`,
-      category: 'TRANSACTION',
-      teamId: chosen.teamId,
-    };
-
-    set(state => ({
-      player: updated,
-      newsFeed: [news, ...state.newsFeed],
-    }));
+    
+    // Abre o modal de propostas para o usuário escolher conscientemente o destino
+    set({
+      contractOffers: options,
+      isContractModalOpen: true,
+    });
   },
 
   createNewPlayer: (data) => {

@@ -1,8 +1,10 @@
 import { PlayerEntity, ContractOffer } from '../types';
 import { NBA_TEAMS, getTeamById } from '../data/teamsRepository';
+import { evaluateTeamFit } from './teamFitEngine';
 
 /**
- * Gera propostas formais de renovação do time atual e ofertas de franquias rivais da NBA
+ * Gera propostas formais de renovação do time atual e ofertas de franquias rivais da NBA,
+ * analisando encaixe tático, papel projetado e concorrência na posição.
  */
 export function generateContractOffers(player: PlayerEntity): ContractOffer[] {
   const currentTeam = getTeamById(player.currentTeamId);
@@ -22,27 +24,24 @@ export function generateContractOffers(player: PlayerEntity): ContractOffer[] {
     marketSalary = Math.round(9000000 + (ovr - 75) * 1400000);
   }
 
-  const role: ContractOffer['role'] = ovr >= 90 
-    ? 'FRANCHISE_CORNERSTONE' 
-    : ovr >= 80 
-      ? 'STARTER' 
-      : 'SIXTH_MAN';
-
   const offers: ContractOffer[] = [];
 
   // 1. Proposta de Renovação / Extensão da Franquia Atual
   if (currentTeam) {
     const loyaltyBonus = Math.round(marketSalary * 1.08); // 8% a mais pelo direito Bird
+    const currentFit = evaluateTeamFit(player, currentTeam.id);
+
     offers.push({
       id: `offer-current-${Date.now()}`,
       teamId: currentTeam.id,
       teamName: currentTeam.name,
       salaryPerYear: loyaltyBonus,
       yearsTotal: 4,
-      role,
+      role: currentFit.expectedRole,
       isExtension: true,
-      pitchMessage: `A diretoria e a torcida do ${currentTeam.name} querem manter você no centro do projeto vencedor por mais 4 anos com contrato máximo!`,
+      pitchMessage: `A diretoria do ${currentTeam.name} quer manter você como peça central do projeto por mais 4 anos sob contrato de lealdade Bird Rights!`,
       teamPrestige: currentTeam.prestige,
+      teamFit: currentFit,
     });
   }
 
@@ -52,17 +51,23 @@ export function generateContractOffers(player: PlayerEntity): ContractOffer[] {
     .sort(() => Math.random() - 0.5)
     .slice(0, 4);
 
-  const pitchTemplates = [
-    (teamName: string) => `O General Manager do ${teamName} preparou espaço salarial limpo e quer você comandando o nosso ataque rumo ao título!`,
-    (teamName: string) => `A comissão técnica do ${teamName} projetou um plano tático ao redor do seu estilo de jogo para você ser o líder da equipe.`,
-    (teamName: string) => `O ${teamName} possui um elenco jovem e competitivo pronto para dar o salto com a sua liderança veterana e capacidade de decisão no clutch.`
-  ];
-
   otherTeams.forEach((team, idx) => {
     // Variação financeira entre ofertas (-10% a +12%)
     const variation = 0.90 + (idx * 0.06);
     const rivalSalary = Math.round(marketSalary * variation);
     const rivalYears = idx % 2 === 0 ? 3 : 4;
+    const teamFit = evaluateTeamFit(player, team.id);
+
+    let customPitch = `O General Manager do ${team.name} preparou espaço salarial limpo para ter você no elenco.`;
+    if (teamFit.expectedRole === 'FRANCHISE_CORNERSTONE') {
+      customPitch = `O ${team.name} quer você como a estrela número 1 indiscutível e dono da franquia rumo ao título!`;
+    } else if (teamFit.expectedRole === 'STARTER') {
+      customPitch = `A comissão técnica do ${team.name} projetou sua titularidade imediata para comandar o quinteto principal.`;
+    } else if (teamFit.expectedRole === 'SIXTH_MAN') {
+      customPitch = `O ${team.name} oferece papel de 6º homem estelar e líder ofensivo da segunda unidade na briga por playoffs.`;
+    } else if (teamFit.expectedRole === 'ROTATION_BATTLE') {
+      customPitch = `O ${team.name} propõe disputa sadia de minutos com ${teamFit.directRivalName || 'o titular atual'} para elevar o nível da equipe.`;
+    }
 
     offers.push({
       id: `offer-rival-${team.id}-${Date.now()}`,
@@ -70,10 +75,11 @@ export function generateContractOffers(player: PlayerEntity): ContractOffer[] {
       teamName: team.name,
       salaryPerYear: rivalSalary,
       yearsTotal: rivalYears,
-      role,
+      role: teamFit.expectedRole,
       isExtension: false,
-      pitchMessage: pitchTemplates[idx % pitchTemplates.length](team.name),
+      pitchMessage: customPitch,
       teamPrestige: team.prestige,
+      teamFit,
     });
   });
 
@@ -81,17 +87,32 @@ export function generateContractOffers(player: PlayerEntity): ContractOffer[] {
 }
 
 /**
- * Gera opções imediatas para solicitação de troca (Trade Request)
+ * Gera opções imediatas para solicitação de troca (Trade Request) com análise de papel projetado
  */
-export function generateTradeOptions(player: PlayerEntity): { teamId: string; teamName: string; pitch: string }[] {
+export function generateTradeOptions(player: PlayerEntity): ContractOffer[] {
   const eligible = NBA_TEAMS
     .filter(t => t.id !== player.currentTeamId)
     .sort(() => Math.random() - 0.5)
     .slice(0, 3);
 
-  return eligible.map(t => ({
-    teamId: t.id,
-    teamName: t.name,
-    pitch: `O ${t.name} (Prestígio: ${t.prestige}) aceita absorver o seu contrato atual via pacote de escolhas de draft e jovens ativos.`,
-  }));
+  const salary = player.contract ? player.contract.salaryPerYear : 12000000;
+  const years = player.contract ? player.contract.yearsRemaining : 3;
+
+  return eligible.map(t => {
+    const fit = evaluateTeamFit(player, t.id);
+    const msg = `A diretoria do ${t.name} (Prestígio: ${t.prestige}) preparou pacote de troca para absorver seu contrato. Papel projetado: ${fit.roleTitle}.`;
+    return {
+      id: `trade-offer-${t.id}-${Date.now()}`,
+      teamId: t.id,
+      teamName: t.name,
+      salaryPerYear: salary,
+      yearsTotal: Math.max(1, years),
+      role: fit.expectedRole,
+      isExtension: false,
+      pitchMessage: msg,
+      pitch: msg,
+      teamPrestige: t.prestige,
+      teamFit: fit,
+    };
+  });
 }

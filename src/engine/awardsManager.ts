@@ -33,6 +33,8 @@ interface CandidateProfile {
   clutch: number;
   teamWins: number;
   isRookie: boolean;
+  isStarter: boolean;
+  improvementScore: number;
 }
 
 /**
@@ -48,6 +50,17 @@ export function calculateSeasonAwards(
   // 1. Reúne candidatos (Estrelas da NBA + Talentos Jr + Jogador do Usuário)
   const jrLegends = getGenerationalTalentsForSeason(player.careerStats.length);
   const allNbaStars = [...NBA_ACTIVE_STARS, ...jrLegends];
+
+  // Calcula taxa de evolução do usuário para MIP
+  let userImprovementScore = 0;
+  if (player.careerStats.length > 0) {
+    const lastSeason = player.careerStats[player.careerStats.length - 1];
+    const ppgDelta = Math.max(0, player.seasonStats.pointsPerGame - (lastSeason.pointsPerGame || 0));
+    const perDelta = Math.max(0, player.seasonStats.per - (lastSeason.per || 15));
+    userImprovementScore = (ppgDelta * 2.5) + (perDelta * 2.0) + Math.max(0, player.overall - 74) * 1.5;
+  }
+
+  const isUserStarter = player.seasonStats.gamesStarted > (player.seasonStats.gamesPlayed * 0.5);
 
   const userProfile: CandidateProfile = {
     id: player.id,
@@ -71,6 +84,8 @@ export function calculateSeasonAwards(
     clutch: player.attributes.clutch,
     teamWins: teamWinsMap[player.currentTeamId] || 41,
     isRookie: isUserRookie,
+    isStarter: isUserStarter,
+    improvementScore: userImprovementScore,
   };
 
   const candidates: CandidateProfile[] = [
@@ -80,6 +95,22 @@ export function calculateSeasonAwards(
       const variance = (Math.random() - 0.5) * 0.1;
       const teamWins = teamWinsMap[star.teamId] || Math.round(35 + (star.overall - 80) * 1.5);
 
+      const isStarter = star.isStarter !== false;
+      const gamesPlayed = Math.round(70 + Math.random() * 12); // 70 a 82 jogos
+      // Se for reserva legítimo (ex: Naz Reid, Monk), tem poucos jogos como titular
+      const gamesStarted = isStarter 
+        ? Math.max(55, Math.round(gamesPlayed - Math.random() * 5))
+        : Math.round(2 + Math.random() * 10);
+
+      // Calcula salto de evolução (MIP) para estrelas com dados históricos
+      let improvementScore = 0;
+      if (star.previousStats) {
+        const ppgDelta = Math.max(0, star.baseStats.ppg - star.previousStats.ppg);
+        const perDelta = Math.max(0, star.baseStats.per - star.previousStats.per);
+        const ovrDelta = Math.max(0, star.overall - star.previousStats.overall);
+        improvementScore = (ppgDelta * 2.4) + (perDelta * 2.0) + (ovrDelta * 2.5);
+      }
+
       return {
         id: star.id,
         name: star.name,
@@ -87,8 +118,8 @@ export function calculateSeasonAwards(
         position: star.position,
         overall: star.overall,
         isUser: false,
-        gamesPlayed: Math.round(72 + Math.random() * 8),
-        gamesStarted: Math.round(72 + Math.random() * 8),
+        gamesPlayed,
+        gamesStarted,
         ppg: Math.round((star.baseStats.ppg * (1 + variance)) * 10) / 10,
         rpg: Math.round((star.baseStats.rpg * (1 + variance)) * 10) / 10,
         apg: Math.round((star.baseStats.apg * (1 + variance)) * 10) / 10,
@@ -101,7 +132,9 @@ export function calculateSeasonAwards(
         dws: Math.round((star.baseStats.dws * (1 + variance)) * 10) / 10,
         clutch: Math.round(75 + (star.overall - 80)),
         teamWins,
-        isRookie: star.id.includes('chet') || star.id.includes('wembanyama'),
+        isRookie: Boolean(star.isRookie),
+        isStarter,
+        improvementScore,
       };
     })
   ];
@@ -119,14 +152,30 @@ export function calculateSeasonAwards(
   ): AwardResult {
     let pool = candidates;
     if (filterFn) {
-      pool = candidates.filter(filterFn);
-      if (pool.length === 0) pool = candidates;
+      const filtered = candidates.filter(filterFn);
+      if (filtered.length >= 3) {
+        pool = filtered;
+      } else if (filtered.length > 0) {
+        pool = filtered;
+      } else {
+        // Fallback inteligente para garantir coerência de cada categoria
+        if (type === 'SIXTH_MAN') {
+          pool = [...candidates].sort((a, b) => (a.gamesStarted / (a.gamesPlayed || 1)) - (b.gamesStarted / (b.gamesPlayed || 1))).slice(0, 10);
+        } else if (type === 'ROTY') {
+          pool = candidates.filter(c => c.isRookie);
+          if (pool.length === 0) pool = [...candidates].sort((a, b) => a.overall - b.overall).slice(0, 5);
+        } else if (type === 'MIP') {
+          pool = [...candidates].sort((a, b) => b.improvementScore - a.improvementScore).slice(0, 10);
+        } else {
+          pool = candidates;
+        }
+      }
     }
 
     const scored = pool.map(c => {
       const rawScore = scoreFn(c);
       // Adiciona ruído leve de votação da imprensa
-      const noise = (Math.random() - 0.5) * 4;
+      const noise = (Math.random() - 0.5) * 3;
       return { candidate: c, score: Math.max(1, rawScore + noise) };
     }).sort((a, b) => b.score - a.score);
 
@@ -174,51 +223,57 @@ export function calculateSeasonAwards(
   // Categorias de Prêmios Individuais
   // ----------------------------------------------------
 
-  // 1. MVP (Michael Jordan Trophy)
+  // 1. MVP (Michael Jordan Trophy) - Mínimo de 65 jogos (Regra Oficial da NBA)
   const mvp = buildAward(
     'MVP',
     'Jogador Mais Valioso (MVP)',
     'Troféu Michael Jordan',
     '🏆',
-    c => (c.winShares * 3.5) + (c.per * 1.8) + (c.ppg * 0.8) + (c.teamWins * 0.4)
+    c => {
+      const winBonus = c.teamWins >= 55 ? 16 : c.teamWins >= 50 ? 10 : c.teamWins >= 45 ? 5 : 0;
+      return (c.winShares * 4.2) + (c.per * 2.2) + (c.ppg * 1.1) + (c.teamWins * 0.55) + winBonus;
+    },
+    c => c.gamesPlayed >= 65
   );
 
-  // 2. DPOY (Hakeem Olajuwon Trophy)
+  // 2. DPOY (Hakeem Olajuwon Trophy) - Mínimo de 65 jogos
   const dpoy = buildAward(
     'DPOY',
     'Melhor Defensor do Ano (DPOY)',
     'Troféu Hakeem Olajuwon',
     '🛡️',
-    c => (c.dws * 9.0) + (c.bpg * 8.0) + (c.spg * 8.0) + (c.rpg * 0.5)
+    c => (c.dws * 10.0) + (c.bpg * 8.5) + (c.spg * 8.5) + (c.rpg * 0.6) + (c.teamWins * 0.25),
+    c => c.gamesPlayed >= 65
   );
 
-  // 3. ROTY (Wilt Chamberlain Trophy)
+  // 3. ROTY (Wilt Chamberlain Trophy) - Calouros oficiais
   const roty = buildAward(
     'ROTY',
     'Calouro do Ano (ROTY)',
     'Troféu Wilt Chamberlain',
     '⭐',
-    c => (c.ppg * 1.5) + (c.rpg * 0.8) + (c.apg * 0.8) + c.winShares * 2.0,
-    c => c.isRookie
+    c => (c.ppg * 1.6) + (c.rpg * 0.9) + (c.apg * 0.9) + (c.winShares * 2.6) + (c.per * 1.3),
+    c => c.isRookie && c.gamesPlayed >= 45
   );
 
-  // 4. Sexto Homem do Ano (John Havlicek Trophy)
+  // 4. Sexto Homem do Ano (John Havlicek Trophy) - Mais jogos vindo do banco
   const sixthMan = buildAward(
     'SIXTH_MAN',
     'Sexto Homem do Ano (6MOY)',
     'Troféu John Havlicek',
     '⚡',
-    c => (c.ppg * 1.8) + (c.apg * 1.0) + (c.per * 1.2),
-    c => c.gamesStarted <= (c.gamesPlayed * 0.5) || c.isUser && c.gamesStarted < 40
+    c => (c.ppg * 2.2) + (c.apg * 1.2) + (c.rpg * 0.8) + (c.per * 1.5) + (c.teamWins * 0.25),
+    c => c.gamesPlayed >= 50 && c.gamesStarted <= (c.gamesPlayed * 0.35)
   );
 
-  // 5. Jogador Que Mais Evoluiu (George Mikan Trophy)
+  // 5. Jogador Que Mais Evoluiu (George Mikan Trophy) - Salto estatístico real
   const mip = buildAward(
     'MIP',
     'Jogador Que Mais Evoluiu (MIP)',
     'Troféu George Mikan',
     '📈',
-    c => (c.ppg * 1.2) + (c.per * 1.5) + (c.overall - 75) * 2.0
+    c => (c.improvementScore * 3.5) + (c.ppg * 0.9) + (c.per * 0.9),
+    c => c.gamesPlayed >= 50 && c.improvementScore >= 4 && !c.isRookie
   );
 
   // 6. Jogador Mais Decisivo no Clutch (Jerry West Trophy)
@@ -227,7 +282,8 @@ export function calculateSeasonAwards(
     'Jogador Mais Decisivo (Clutch Player)',
     'Troféu Jerry West',
     '⏱️',
-    c => (c.clutch * 0.8) + (c.ppg * 0.9) + (c.teamWins * 0.3)
+    c => (c.clutch * 0.85) + (c.ppg * 0.95) + (c.teamWins * 0.4),
+    c => c.gamesPlayed >= 55
   );
 
   // 7. Finals MVP (Placeholder que será preenchido após os playoffs)
@@ -259,16 +315,24 @@ export function calculateSeasonAwards(
   const easternCandidates = candidates
     .filter(c => {
       const team = getTeamById(c.teamId);
-      return team?.conference === 'Eastern';
+      return team?.conference === 'Eastern' && c.gamesPlayed >= 40;
     })
-    .sort((a, b) => (b.ppg + b.per + b.teamWins * 0.2) - (a.ppg + a.per + a.teamWins * 0.2));
+    .sort((a, b) => {
+      const scoreA = (a.ppg * 1.2) + (a.per * 1.5) + (a.winShares * 1.6) + (a.teamWins * 0.3);
+      const scoreB = (b.ppg * 1.2) + (b.per * 1.5) + (b.winShares * 1.6) + (b.teamWins * 0.3);
+      return scoreB - scoreA;
+    });
 
   const westernCandidates = candidates
     .filter(c => {
       const team = getTeamById(c.teamId);
-      return team?.conference === 'Western';
+      return team?.conference === 'Western' && c.gamesPlayed >= 40;
     })
-    .sort((a, b) => (b.ppg + b.per + b.teamWins * 0.2) - (a.ppg + a.per + a.teamWins * 0.2));
+    .sort((a, b) => {
+      const scoreA = (a.ppg * 1.2) + (a.per * 1.5) + (a.winShares * 1.6) + (a.teamWins * 0.3);
+      const scoreB = (b.ppg * 1.2) + (b.per * 1.5) + (b.winShares * 1.6) + (b.teamWins * 0.3);
+      return scoreB - scoreA;
+    });
 
   // Garante 12 All-Stars completos no Leste
   const eastTeams = NBA_TEAMS.filter(t => t.conference === 'Eastern');
@@ -296,6 +360,8 @@ export function calculateSeasonAwards(
       clutch: 80,
       teamWins: teamWinsMap[t.id] || 42,
       isRookie: false,
+      isStarter: true,
+      improvementScore: 0,
     });
   }
 
@@ -325,6 +391,8 @@ export function calculateSeasonAwards(
       clutch: 80,
       teamWins: teamWinsMap[t.id] || 42,
       isRookie: false,
+      isStarter: true,
+      improvementScore: 0,
     });
   }
 
@@ -347,9 +415,14 @@ export function calculateSeasonAwards(
   }));
 
   // ----------------------------------------------------
-  // All-NBA Teams (1st, 2nd, 3rd)
+  // All-NBA Teams (1st, 2nd, 3rd) - Mínimo 65 jogos
   // ----------------------------------------------------
-  const allNbaRanked = [...candidates].sort((a, b) => (b.winShares * 2 + b.per + b.ppg * 0.5) - (a.winShares * 2 + a.per + a.ppg * 0.5));
+  const allNbaEligible = candidates.filter(c => c.gamesPlayed >= 65);
+  const allNbaPool = allNbaEligible.length >= 15 ? allNbaEligible : candidates;
+  const allNbaRanked = [...allNbaPool].sort((a, b) => 
+    (b.winShares * 3.5 + b.per * 2.2 + b.ppg * 1.0 + b.teamWins * 0.4) - 
+    (a.winShares * 3.5 + a.per * 2.2 + a.ppg * 1.0 + a.teamWins * 0.4)
+  );
 
   const allNbaTeams = {
     first: allNbaRanked.slice(0, 5).map(c => ({ playerId: c.id, playerName: c.name, teamId: c.teamId, position: c.position, teamGrade: 'FIRST' as const, isUser: c.isUser })),
@@ -357,15 +430,24 @@ export function calculateSeasonAwards(
     third: allNbaRanked.slice(10, 15).map(c => ({ playerId: c.id, playerName: c.name, teamId: c.teamId, position: c.position, teamGrade: 'THIRD' as const, isUser: c.isUser })),
   };
 
-  // All-Defensive Teams
-  const allDefRanked = [...candidates].sort((a, b) => (b.dws * 3 + b.spg * 2 + b.bpg * 2) - (a.dws * 3 + a.spg * 2 + a.bpg * 2));
+  // All-Defensive Teams - Mínimo 60 jogos
+  const allDefEligible = candidates.filter(c => c.gamesPlayed >= 60);
+  const allDefPool = allDefEligible.length >= 10 ? allDefEligible : candidates;
+  const allDefRanked = [...allDefPool].sort((a, b) => 
+    (b.dws * 4.5 + b.spg * 3.5 + b.bpg * 3.5 + b.rpg * 0.6) - 
+    (a.dws * 4.5 + a.spg * 3.5 + a.bpg * 3.5 + a.rpg * 0.6)
+  );
+
   const allDefensiveTeams = {
     first: allDefRanked.slice(0, 5).map(c => ({ playerId: c.id, playerName: c.name, teamId: c.teamId, position: c.position, teamGrade: 'FIRST' as const, isUser: c.isUser })),
     second: allDefRanked.slice(5, 10).map(c => ({ playerId: c.id, playerName: c.name, teamId: c.teamId, position: c.position, teamGrade: 'SECOND' as const, isUser: c.isUser })),
   };
 
-  // All-Rookie Team
-  const rookieRanked = candidates.filter(c => c.isRookie).sort((a, b) => (b.ppg + b.winShares) - (a.ppg + a.winShares));
+  // All-Rookie Team - Calouros com pelo menos 35 jogos
+  const rookieRanked = candidates
+    .filter(c => c.isRookie && c.gamesPlayed >= 35)
+    .sort((a, b) => (b.ppg * 1.5 + b.per + b.winShares * 2) - (a.ppg * 1.5 + a.per + a.winShares * 2));
+
   const allRookieTeam = rookieRanked.slice(0, 5).map(c => ({ playerId: c.id, playerName: c.name, teamId: c.teamId, position: c.position, teamGrade: 'FIRST' as const, isUser: c.isUser }));
 
   return {

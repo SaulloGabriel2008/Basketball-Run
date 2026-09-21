@@ -435,14 +435,46 @@ export interface SeasonAwardsGala {
 // ----------------------------------------------------
 // MERCADO DE CONTRATOS, RENOVAÇÃO & FREE AGENCY
 // ----------------------------------------------------
+export type ProjectedRole = 
+  | 'FRANCHISE_CORNERSTONE' 
+  | 'STARTER' 
+  | 'ROTATION_BATTLE' 
+  | 'POSITION_BATTLE'
+  | 'SIXTH_MAN' 
+  | 'ROTATION' 
+  | 'BENCHWARMER'
+  | 'DEEP_BENCH';
+
+export interface TeamFitReport {
+  targetTeamId: string;
+  targetTeamName: string;
+  projectType: 'CONTENDER' | 'PLAYOFFS' | 'REBUILD' | 'REBUILDING';
+  projectLabel: string;
+  fitStars: number; // 1 a 5
+  expectedRole: ProjectedRole;
+  roleTitle: string;
+  expectedMinutes: string;
+  directRivalName?: string;
+  directRivalOvr?: number;
+  directRivalPosition?: string;
+  isWorthIt: boolean;
+  verdictTitle: string;
+  verdictPtBr: string;
+  analysisText: string;
+  prosPtBr: string[];
+  consPtBr: string[];
+}
+
 export interface ContractOffer {
   id: string;
   teamId: string;
   teamName: string;
   salaryPerYear: number;
   yearsTotal: number;
-  role: 'FRANCHISE_CORNERSTONE' | 'STARTER' | 'SIXTH_MAN';
+  role: ProjectedRole;
   isExtension: boolean;
   pitchMessage: string;
+  pitch?: string;
   teamPrestige: number;
+  teamFit?: TeamFitReport;
 }

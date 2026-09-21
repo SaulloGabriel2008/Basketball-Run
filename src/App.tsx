@@ -14,10 +14,16 @@ import { EventModal } from './components/EventModal';
 import { AwardsCeremonyModal } from './components/AwardsCeremonyModal';
 import { PlayoffsModal } from './components/PlayoffsModal';
 import { ContractOffersModal } from './components/ContractOffersModal';
+import { HoopLegacyTestDashboard } from './components/HoopLegacyTestDashboard';
 
 export const App: React.FC = () => {
   const { player, currentScreen, loadFromIndexedDb } = useGameStore();
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
+  const [isTestMode, setIsTestMode] = useState<boolean>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'classic') return false;
+    return true; // Test mode active by default for immediate evaluation
+  });
 
   useEffect(() => {
     async function initDb() {
@@ -32,6 +38,10 @@ export const App: React.FC = () => {
     initDb();
   }, [loadFromIndexedDb]);
 
+  if (isTestMode) {
+    return <HoopLegacyTestDashboard onBackToClassic={() => setIsTestMode(false)} />;
+  }
+
   if (!hasAttemptedLoad) {
     return (
       <div className="min-h-screen bg-[#0a0c0f] flex items-center justify-center font-mono text-xs text-[#8a96a8]">
@@ -41,7 +51,16 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0a0c0f] text-[#f0f3f8]">
+    <div className="min-h-screen flex flex-col bg-[#0a0c0f] text-[#f0f3f8] relative">
+      {/* Botão Flutuante para Retornar ao Teste do Novo Visual */}
+      <button
+        onClick={() => setIsTestMode(true)}
+        className="fixed bottom-6 right-6 z-50 bg-[#00d659] hover:bg-[#42f372] text-[#003912] font-condensed font-black px-4 py-2.5 rounded-lg shadow-[0_0_20px_rgba(0,214,89,0.5)] flex items-center gap-2 text-sm uppercase tracking-wider transition-all transform hover:scale-105 cursor-pointer"
+      >
+        <span className="text-base">🧪</span>
+        <span>Ver Novo Visual (Stitch v2.4)</span>
+      </button>
+
       {/* Navegação Superior */}
       {player && <HeaderNav />}
 
